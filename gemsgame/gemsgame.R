@@ -1,6 +1,8 @@
 #install.packages(c("beepr"))
 #library(beepr)
 
+#TODO: sounds? disable moving if it does not score points? check if state has no legal moves?
+
 gems <- matrix(0, nrow = 8, ncol = 8)
 selected <- rep(-1, times = 4)
 menu <- 0
@@ -192,8 +194,8 @@ if(selected[1] != -1 && selected[1] == selected[3] && selected[2] == selected[4]
   if(isadjacent(selected[1], selected[2], selected[3], selected[4])) {
     gems <- swapgems(selected[1], selected[2], selected[3], selected[4])
   }
+  checked <- checkgems()
   while(length(checked)>0) {
-    checked <- checkgems()
     clear <- cleargems(checked)
     gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
     print(clear[65])
@@ -207,7 +209,7 @@ plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = paste("Score:",tex
 
 for (i in 1:8) {
   for (j in 1:8) {
-      rect(i, j, i + 1, j + 1, col = gemColors[gems[i, j]], border = "black")
+    rect(i, j, i + 1, j + 1, col = gemColors[gems[i, j]], border = "black")
   }
 }
 
