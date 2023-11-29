@@ -1,8 +1,9 @@
 #install.packages(c("beepr"))
 #library(beepr)
 
-#TODO: sounds? graphics?
+#TODO: sounds? graphics? twist mode not functional
 
+par(bg = "darkblue")
 gems <- matrix(0, nrow = 8, ncol = 8)
 tempgems <- matrix(0, nrow = 8, ncol = 8)
 tempcheck <- list()
@@ -16,6 +17,7 @@ options <- c(FALSE, FALSE, FALSE)
 # Resetpt: Subtracts 10 points if resetting freely (does not subtract if a reset is forced)
 # Twist: instead of swapping two adjacent gems, rotates a whole 2x2 area (selecting and deselecting inverts)
 gemColors <- c("lightgray", "red", "yellow", "chartreuse", "orange", "cyan", "magenta")
+btnColors <- c("darkred","green")
 
 resetboard <- function() {
   for (i in 1:8) {
@@ -186,7 +188,7 @@ refill <- function(ge) {
 }
 
 isadjacent <- function(row1, col1, row2, col2) {
-  return(((abs(row1-row2) == 1) || (abs(col1-col2) == 1)) && !(((abs(row1-row2) == 1) && (abs(col1-col2) == 1))))
+  return(((abs(row1-row2) <= 1) && (abs(col1-col2) <= 1)) && !(((abs(row1-row2) == 1) && (abs(col1-col2) == 1))))
 }
 
 trinum <- function(n) {
@@ -207,15 +209,36 @@ plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by s
 par(bg = "darkblue")
 text(5,5, "Gem Game (for R)")
 
-while(floor(click$y) < 4){
+while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   click <- locator(1)
-  plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = paste("Score:",textboxes[1]), ylab = paste("Resets:",textboxes[2]), axes = FALSE, frame.plot = FALSE)
-  text(4,4, "Start")
+  plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = "", ylab = "", axes = FALSE, frame.plot = FALSE)
+  
+  if((floor(click$x) > 1 && floor(click$x) < 7)){
+    if(floor(click$y) == 3)
+      options[1] = !options[1]
+    if(floor(click$y) == 2)
+      options[2] = !options[2]
+    if(floor(click$y) == 1)
+      options[3] = !options[3]
+  }
+  
+  rect(1, 5, 7, 6, col = "lightblue", border = "cyan")
+  rect(1, 3, 7, 4, col = btnColors[options[1]+1], border = "black")
+  rect(1, 2, 7, 3, col = btnColors[options[2]+1], border = "black")
+  rect(1, 1, 7, 2, col = btnColors[options[3]+1], border = "black")
+  text(4,8, "Gem Game")
+  text(4,3.5, "Freeswap")
+  text(4,2.5, "Resetpts")
+  text(4,1.5, "Twist")
+  text(4,5.5, "Start")
+  
+  menu = min(menu + 1,2)
 }
+plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "", ylab = "", axes = FALSE, frame.plot = TRUE)
+menu <- 0
 
 #game loop
 while(TRUE) {
-click <- locator(1)
 
 if(floor(click$x) == 0 && floor(click$y) == 0) {
   textboxes[2] = textboxes[2] + 1
@@ -294,5 +317,7 @@ if(!legalmoves(gems)){
 }
 
 menu <- 1
+
+click <- locator(1)
 
 }
