@@ -1,13 +1,20 @@
 #install.packages(c("beepr"))
 #library(beepr)
 
-#TODO: sounds? disable moving if it does not score points? check if state has no legal moves?
+#TODO: sounds? graphics?
 
 gems <- matrix(0, nrow = 8, ncol = 8)
+tempgems <- matrix(0, nrow = 8, ncol = 8)
+tempcheck <- list()
 selected <- rep(-1, times = 4)
 menu <- 0
+click <- list(x = 3, y = 3)
 textboxes <- c(0,0)
 colorcombo <- c(-1,-1)
+options <- c(FALSE, FALSE, FALSE)
+# Freeswap: can swap as long as spots are adjacent, doesn't need to cause a valid solve
+# Resetpt: Subtracts 10 points if resetting freely (does not subtract if a reset is forced)
+# Twist: instead of swapping two adjacent gems, rotates a whole 2x2 area (selecting and deselecting inverts)
 gemColors <- c("lightgray", "red", "yellow", "chartreuse", "orange", "cyan", "magenta")
 
 resetboard <- function() {
@@ -18,19 +25,31 @@ resetboard <- function() {
   return(gems)
 }
 
-checkgems <- function() {
+failboard <- function() {
+  k <- 0
+  for (i in 1:8) {
+    for (j in 1:8) {
+      gems[i, j] = (k + 1)
+      k <- (k+1) %% 7
+    }
+  }
+  #beep()
+  return(gems)
+}
+
+checkgems <- function(goms) {
   checkedgems <- list()
   for (i in 1:8) { #vertical
     colorcombo <- c(-1,-1)
     for (j in 1:8) {
       if(colorcombo[1] == -1) {
-        colorcombo[1] = gems[i,j]
+        colorcombo[1] = goms[i,j]
         colorcombo[2] = 0
       }
-      if(colorcombo[1] == gems[i,j]) {
+      if(colorcombo[1] == goms[i,j]) {
         colorcombo[2] = colorcombo[2] +1
       } else {
-        colorcombo[1] = gems[i,j]
+        colorcombo[1] = goms[i,j]
         colorcombo[2] = 1
       }
       if(colorcombo[2] == 3) {
@@ -43,13 +62,13 @@ checkgems <- function() {
     colorcombo <- c(-1,-1)
     for (i in 1:8) {
       if(colorcombo[1] == -1) {
-        colorcombo[1] = gems[i,j]
+        colorcombo[1] = goms[i,j]
         colorcombo[2] = 0
       }
-      if(colorcombo[1] == gems[i,j]) {
+      if(colorcombo[1] == goms[i,j]) {
         colorcombo[2] = colorcombo[2] + 1
       } else {
-        colorcombo[1] = gems[i,j]
+        colorcombo[1] = goms[i,j]
         colorcombo[2] = 1
       }
       if(colorcombo[2] == 3) {
@@ -58,6 +77,37 @@ checkgems <- function() {
     }
   }
   return(checkedgems)
+}
+
+legalmoves <- function(goms) {
+  if(length(checked)>0) {
+    return(TRUE) #should never happen, but would be accurate
+  }
+  
+  tempgems <- gems
+  #marked function not useful since it would count an L-shaped triomino as valid
+  for (i in 1:8) { #vertical
+    for (j in 1:7) {
+      tempgems <- swapgems(tempgems, i, j, i, j+1)
+      tempcheck <- checkgems(tempgems)
+      if(length(tempcheck)>0){
+        return(TRUE)
+      }
+      tempgems <- swapgems(tempgems, i, j, i, j+1)
+    }
+  }
+  
+  for (j in 1:8) { #horizontal
+    for (i in 1:7) {
+      swapgems(tempgems, i, j, i+1, j)
+      tempcheck <- checkgems(tempgems)
+      if(length(tempcheck)>0){
+        return(TRUE)
+      }
+      swapgems(tempgems, i, j, i+1, j)
+    }
+  }
+  return(FALSE)
 }
 
 cleargems <- function(checkedgems) {
@@ -110,11 +160,11 @@ markpass <- function(marked) {
 	return(marked)
 }
 
-swapgems <- function(row1, col1, row2, col2) {
-  temp <- gems[row1, col1]
-  gems[row1, col1] = gems[row2, col2]
-  gems[row2, col2] = temp
-  return(gems)
+swapgems <- function(goms, row1, col1, row2, col2) {
+  temp <- goms[row1, col1]
+  goms[row1, col1] = gems[row2, col2]
+  goms[row2, col2] = temp
+  return(goms)
 }
 
 refill <- function(ge) {
@@ -145,11 +195,11 @@ trinum <- function(n) {
 
 #board reset and cleanup
 gems <- resetboard()
-checked <- checkgems()
+checked <- checkgems(gems)
 while(length(checked)>0) {
   clear <- cleargems(checked)
   gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
-  checked <- checkgems()
+  checked <- checkgems(gems)
 }
 
 #menu
@@ -157,45 +207,66 @@ plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by s
 par(bg = "darkblue")
 text(5,5, "Gem Game (for R)")
 
-while(TRUE) {
-click_coordinates <- locator(1)
+while(floor(click$y) < 4){
+  click <- locator(1)
+  plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = paste("Score:",textboxes[1]), ylab = paste("Resets:",textboxes[2]), axes = FALSE, frame.plot = FALSE)
+  text(4,4, "Start")
+}
 
-if(floor(click_coordinates$x) == 0 && floor(click_coordinates$y) == 0) {
+#game loop
+while(TRUE) {
+click <- locator(1)
+
+if(floor(click$x) == 0 && floor(click$y) == 0) {
   textboxes[2] = textboxes[2] + 1
+  if(legalmoves(gems) && options[2]){
+    textboxes[1] = textboxes[1] - 10
+  }
+
   gems <- resetboard()
+  checked <- checkgems(gems)
   while(length(checked)>0) {
     clear <- cleargems(checked)
     gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
-    checked <- checkgems()
+    checked <- checkgems(gems)
   }
+  
 }
 
 #selection
 if(selected[1] == -1 && menu != 0) { #pair 1
-  if(floor(click_coordinates$x) > 0 && floor(click_coordinates$x) < 9) {
-    selected[1] = floor(click_coordinates$x)
+  if(floor(click$x) > 0 && floor(click$x) < 9) {
+    selected[1] = floor(click$x)
   }
-  if(floor(click_coordinates$y) > 0 && floor(click_coordinates$y) < 9) {
-    selected[2] = floor(click_coordinates$y)
+  if(floor(click$y) > 0 && floor(click$y) < 9) {
+    selected[2] = floor(click$y)
   }
 } else { #pair 2
-  if(floor(click_coordinates$x) > 0 && floor(click_coordinates$x) < 9) {
-    selected[3] = floor(click_coordinates$x)
+  if(floor(click$x) > 0 && floor(click$x) < 9) {
+    selected[3] = floor(click$x)
   }
-  if(floor(click_coordinates$y) > 0 && floor(click_coordinates$y) < 9) {
-    selected[4] = floor(click_coordinates$y)
+  if(floor(click$y) > 0 && floor(click$y) < 9) {
+    selected[4] = floor(click$y)
   }
 }
 
 if(selected[1] != -1 && selected[1] == selected[3] && selected[2] == selected[4]) {
   selected <- rep(-1, times = 4) #deselect
-} else if (selected[3] != -1) {
+} else if (selected[3] != -1 && selected[4] != -1) {
   if(isadjacent(selected[1], selected[2], selected[3], selected[4])) {
-    gems <- swapgems(selected[1], selected[2], selected[3], selected[4])
+    if(!options[2]){
+      tempgems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+      tempcheck <- checkgems(tempgems)
+      if(length(tempcheck)>0) {
+        gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+      }
+    } else {
+      gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+    }
   }
-  checked <- checkgems()
+  checked <- checkgems(gems)
   while(length(checked)>0) {
-    checked <- checkgems()
+    checked <- checkgems(gems)
     clear <- cleargems(checked)
     gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
     textboxes[1] = textboxes[1] + trinum(clear[65])
@@ -214,8 +285,12 @@ for (i in 1:8) {
 
 rect(0, 0, 1, 1, col = "purple", border = "white")
 text(0.5,0.5, "Rst")
-if(selected[1] != -1) {
+if(selected[1] != -1 && selected[2] != -1) {
   rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 1.05, selected[2] + 1.05, col = gemColors[gems[selected[1], selected[2]]], border = "blue")
+}
+
+if(!legalmoves(gems)){
+  text(5,0.5, "No legal moves! Reset")
 }
 
 menu <- 1
