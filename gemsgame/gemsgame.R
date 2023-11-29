@@ -146,7 +146,6 @@ trinum <- function(n) {
 #board reset and cleanup
 gems <- resetboard()
 checked <- checkgems()
-print(length(checked))
 while(length(checked)>0) {
   clear <- cleargems(checked)
   gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
@@ -196,9 +195,9 @@ if(selected[1] != -1 && selected[1] == selected[3] && selected[2] == selected[4]
   }
   checked <- checkgems()
   while(length(checked)>0) {
+    checked <- checkgems()
     clear <- cleargems(checked)
     gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
-    print(clear[65])
     textboxes[1] = textboxes[1] + trinum(clear[65])
   }
   selected <- rep(-1, times = 4)
