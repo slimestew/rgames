@@ -12,12 +12,12 @@ menu <- 0
 click <- list(x = 3, y = 3)
 textboxes <- c(0,0)
 colorcombo <- c(-1,-1)
-options <- c(FALSE, FALSE, FALSE)
+options <- c(FALSE, FALSE, 0)
 # Freeswap: can swap as long as spots are adjacent, doesn't need to cause a valid solve
 # Resetpt: Subtracts 10 points if resetting freely (does not subtract if a reset is forced)
 # Twist: instead of swapping two adjacent gems, rotates a whole 2x2 area (selecting and deselecting inverts)
 gemColors <- c("lightgray", "red", "yellow", "chartreuse", "orange", "cyan", "magenta")
-btnColors <- c("darkred","green")
+btnColors <- c("darkred","green", "yellow")
 
 resetboard <- function() {
   for (i in 1:8) {
@@ -88,28 +88,51 @@ legalmoves <- function(goms) {
   
   tempgems <- gems
   #marked function not useful since it would count an L-shaped triomino as valid
-  for (i in 1:8) { #vertical
-    for (j in 1:7) {
-      tempgems <- swapgems(tempgems, i, j, i, j+1)
-      tempcheck <- checkgems(tempgems)
-      if(length(tempcheck)>0){
-        return(TRUE)
-      }
-      tempgems <- swapgems(tempgems, i, j, i, j+1)
-    }
-  }
-  
-  for (j in 1:8) { #horizontal
+  if(options[3]){
     for (i in 1:7) {
-      swapgems(tempgems, i, j, i+1, j)
-      tempcheck <- checkgems(tempgems)
-      if(length(tempcheck)>0){
-        return(TRUE)
+      for (j in 1:7) {
+        if(options[3]==1){ #clockwise
+          tempgems <- twistgems(tempgems, i, j)
+          tempcheck <- checkgems(tempgems)
+          if(length(tempcheck)>0){
+            return(TRUE)
+          }
+          tempgems <- untwistgems(tempgems, i, j)
+        } else { #counterclockwise
+          tempgems <- untwistgems(tempgems, i, j)
+          tempcheck <- checkgems(tempgems)
+          if(length(tempcheck)>0){
+            return(TRUE)
+          }
+          tempgems <- twistgems(tempgems, i, j)
+        }
       }
-      swapgems(tempgems, i, j, i+1, j)
     }
+    return(FALSE)
+  } else {
+    for (i in 1:8) { #vertical
+      for (j in 1:7) {
+        tempgems <- swapgems(tempgems, i, j, i, j+1)
+        tempcheck <- checkgems(tempgems)
+        if(length(tempcheck)>0){
+          return(TRUE)
+        }
+        tempgems <- swapgems(tempgems, i, j, i, j+1)
+      }
+    }
+    
+    for (j in 1:8) { #horizontal
+      for (i in 1:7) {
+        swapgems(tempgems, i, j, i+1, j)
+        tempcheck <- checkgems(tempgems)
+        if(length(tempcheck)>0){
+          return(TRUE)
+        }
+        swapgems(tempgems, i, j, i+1, j)
+      }
+    }
+    return(FALSE)
   }
-  return(FALSE)
 }
 
 cleargems <- function(checkedgems) {
@@ -169,6 +192,24 @@ swapgems <- function(goms, row1, col1, row2, col2) {
   return(goms)
 }
 
+twistgems <- function(goms, row, col) {
+  temp <- goms[row, col]
+  goms[row, col] = gems[row+1, col]
+  goms[row+1, col] = gems[row+1, col+1]
+  goms[row+1, col+1] = gems[row, col+1]
+  goms[row, col+1] = temp
+  return(goms)
+}
+
+untwistgems <- function(goms, row, col) {
+  temp <- goms[row, col]
+  goms[row, col] = gems[row, col+1]
+  goms[row, col+1] = gems[row+1, col+1]
+  goms[row+1, col+1] = gems[row+1, col]
+  goms[row+1, col] = temp
+  return(goms)
+}
+
 refill <- function(ge) {
   for (z in 1:8) { #fall down 8 times
     for (i in 1:8) {
@@ -206,6 +247,8 @@ while(length(checked)>0) {
 
 #menu
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by slimestew", ylab = "", axes = FALSE, frame.plot = TRUE)
+polygon(c(5,1,3,7,9), c(0,4,7,7,4), col="cyan", border="lightblue")
+segments(c(1,3,3,7,7), c(4,4.5,4.5,4.5,4.5), c(3,7,5,5,9), c(4.5,4.5,0,0,4), col="lightblue")
 par(bg = "darkblue")
 text(5,5, "Gem Game (for R)")
 
@@ -219,7 +262,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
     if(floor(click$y) == 2)
       options[2] = !options[2]
     if(floor(click$y) == 1)
-      options[3] = !options[3]
+      options[3] = (options[3]+1) %% 3
   }
   
   rect(1, 5, 7, 6, col = "lightblue", border = "cyan")
@@ -229,7 +272,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   text(4,8, "Gem Game")
   text(4,3.5, "Freeswap")
   text(4,2.5, "Resetpts")
-  text(4,1.5, "Twist")
+  text(4,1.5, ifelse(options[3],ifelse(options[3]==1,"Clockwise","CCW Twist"),"Regular"))
   text(4,5.5, "Start")
   
   menu = min(menu + 1,2)
@@ -257,44 +300,91 @@ if(floor(click$x) == 0 && floor(click$y) == 0) {
 }
 
 #selection
-if(selected[1] == -1 && menu != 0) { #pair 1
-  if(floor(click$x) > 0 && floor(click$x) < 9) {
-    selected[1] = floor(click$x)
-  }
-  if(floor(click$y) > 0 && floor(click$y) < 9) {
-    selected[2] = floor(click$y)
-  }
-} else { #pair 2
-  if(floor(click$x) > 0 && floor(click$x) < 9) {
-    selected[3] = floor(click$x)
-  }
-  if(floor(click$y) > 0 && floor(click$y) < 9) {
-    selected[4] = floor(click$y)
-  }
-}
-
-if(selected[1] != -1 && selected[1] == selected[3] && selected[2] == selected[4]) {
-  selected <- rep(-1, times = 4) #deselect
-} else if (selected[3] != -1 && selected[4] != -1) {
-  if(isadjacent(selected[1], selected[2], selected[3], selected[4])) {
-    if(!options[2]){
-      tempgems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
-      tempcheck <- checkgems(tempgems)
-      if(length(tempcheck)>0) {
-        gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+if(options[3]>0) { #twist
+  if(selected[1] == -1 && menu != 0) { #pair 1
+    if(floor(click$x) > 0 && floor(click$x) < 9) {
+      selected[1] = floor(click$x)
+    }
+    if(floor(click$y) > 0 && floor(click$y) < 9) {
+      selected[2] = floor(click$y)
+    }
+    if(selected[1]==8) selected[1] = 7
+    if(selected[2]==8) selected[2] = 7
+  } else if(floor(click$x) != selected[1] && floor(click$y) != selected[2]) {
+    selected[1] = -1
+    selected[2] = -1
+  } else {
+    if(!options[1]){
+      if(options[3]==1){
+        tempgems <- twistgems(gems, selected[1], selected[2])
+        tempcheck <- checkgems(tempgems)
+        if(length(tempcheck)>0) {
+          gems <- tempgems
+        }
+      } else {
+        tempgems <- untwistgems(gems, selected[1], selected[2])
+        tempcheck <- checkgems(tempgems)
+        if(length(tempcheck)>0) {
+          gems <- tempgems
+        }
       }
     } else {
-      gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+      if(options[3]==1)
+        gems <- twistgems(gems, selected[1], selected[2])
+      else
+        gems <- untwistgems(gems, selected[1], selected[2])
+    }
+    
+    checked <- checkgems(gems)
+    while(length(checked)>0) {
+      checked <- checkgems(gems)
+      clear <- cleargems(checked)
+      gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
+      textboxes[1] = textboxes[1] + trinum(clear[65])
+    }
+    selected <- rep(-1, times = 4)
+  }
+  
+} else { #regular
+    if(selected[1] == -1 && menu != 0) { #pair 1
+      if(floor(click$x) > 0 && floor(click$x) < 9) {
+        selected[1] = floor(click$x)
+      }
+      if(floor(click$y) > 0 && floor(click$y) < 9) {
+        selected[2] = floor(click$y)
+      }
+    } else { #pair 2
+      if(floor(click$x) > 0 && floor(click$x) < 9) {
+        selected[3] = floor(click$x)
+      }
+      if(floor(click$y) > 0 && floor(click$y) < 9) {
+        selected[4] = floor(click$y)
+      }
     }
   }
-  checked <- checkgems(gems)
-  while(length(checked)>0) {
+  
+  if(selected[1] != -1 && selected[1] == selected[3] && selected[2] == selected[4]) {
+    selected <- rep(-1, times = 4) #deselect
+  } else if (selected[3] != -1 && selected[4] != -1) {
+    if(isadjacent(selected[1], selected[2], selected[3], selected[4])) {
+      if(!options[1]){
+        tempgems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+        tempcheck <- checkgems(tempgems)
+        if(length(tempcheck)>0) {
+          gems <- tempgems
+        }
+      } else {
+        gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
+      }
+    }
     checked <- checkgems(gems)
-    clear <- cleargems(checked)
-    gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
-    textboxes[1] = textboxes[1] + trinum(clear[65])
-  }
-  selected <- rep(-1, times = 4)
+    while(length(checked)>0) {
+      checked <- checkgems(gems)
+      clear <- cleargems(checked)
+      gems <- matrix(clear[1:64], nrow = 8, ncol = 8)
+      textboxes[1] = textboxes[1] + trinum(clear[65])
+    }
+    selected <- rep(-1, times = 4)
 }
 
 #draw board
@@ -308,8 +398,14 @@ for (i in 1:8) {
 
 rect(0, 0, 1, 1, col = "purple", border = "white")
 text(0.5,0.5, "Rst")
-if(selected[1] != -1 && selected[2] != -1) {
-  rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 1.05, selected[2] + 1.05, col = gemColors[gems[selected[1], selected[2]]], border = "blue")
+if(options[3]) {
+  if(selected[1] != -1 && selected[2] != -1) {
+    rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 2.025, selected[2] + 2.05, col = "transparent" , border = "blue")
+  }
+} else {
+  if(selected[1] != -1 && selected[2] != -1) {
+    rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 1.05, selected[2] + 1.05, col = gemColors[gems[selected[1], selected[2]]], border = "blue")
+  }
 }
 
 if(!legalmoves(gems)){
