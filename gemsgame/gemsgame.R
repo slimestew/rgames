@@ -1,8 +1,3 @@
-#install.packages(c("beepr"))
-#library(beepr)
-
-#TODO: sounds? graphics? twist mode not functional
-
 par(bg = "darkblue")
 gems <- matrix(0, nrow = 8, ncol = 8)
 tempgems <- matrix(0, nrow = 8, ncol = 8)
@@ -20,22 +15,18 @@ gemColors <- c("lightgray", "red", "yellow", "chartreuse", "orange", "cyan", "ma
 btnColors <- c("darkred","green", "yellow")
 
 resetboard <- function() {
-  for (i in 1:8) {
+  for (i in 1:8)
     gems[i, ] = sample(1:7, 8, replace=TRUE)
-  }
-  #beep()
   return(gems)
 }
 
 failboard <- function() {
   k <- 0
-  for (i in 1:8) {
+  for (i in 1:8)
     for (j in 1:8) {
       gems[i, j] = (k + 1)
       k <- (k+1) %% 7
     }
-  }
-  #beep()
   return(gems)
 }
 
@@ -54,9 +45,8 @@ checkgems <- function(goms) {
         colorcombo[1] = goms[i,j]
         colorcombo[2] = 1
       }
-      if(colorcombo[2] == 3) {
+      if(colorcombo[2] == 3)
         checkedgems <- c(checkedgems, list(list(i,j,"v")))
-      }
     }
   }
   
@@ -73,18 +63,16 @@ checkgems <- function(goms) {
         colorcombo[1] = goms[i,j]
         colorcombo[2] = 1
       }
-      if(colorcombo[2] == 3) {
+      if(colorcombo[2] == 3)
         checkedgems <- c(checkedgems, list(list(i,j,"h")))
-      }
     }
   }
   return(checkedgems)
 }
 
 legalmoves <- function(goms) {
-  if(length(checked)>0) {
+  if(length(checked)>0)
     return(TRUE) #should never happen, but would be accurate
-  }
   
   tempgems <- gems
   #marked function not useful since it would count an L-shaped triomino as valid
@@ -140,24 +128,20 @@ cleargems <- function(checkedgems) {
 	cleared <- 0
 	marked <- matrix(0, nrow = 8, ncol = 8)
 	oldmark <- marked
-	if(length(checkedgems) > 0) {
-  	for(i in 1:length(checkedgems)){
+	if(length(checkedgems) > 0)
+  	for(i in 1:length(checkedgems))
   	  marked[checkedgems[[i]][[1]], checkedgems[[i]][[2]]] = 1
-  	}
-	}
 	
 	while(sum(marked) != 0 && sum(oldmark) != sum(marked)) {
 		oldmark <- marked
 		marked <- markpass(marked)
 	}
 	
-	for (i in 1:8) {
-	  for (j in 1:8) {
-	    if(marked[i,j] == 1) {
+	for (i in 1:8)
+	  for (j in 1:8)
+	    if(marked[i,j] == 1)
 	      tempgem[i,j] = -1 #clear it
-	    }
-	  }
-	}
+	
 	cleared <- sum(marked)
 	gems <- refill(tempgem)
 	return(c(gems,cleared))
@@ -167,18 +151,14 @@ markpass <- function(marked) {
 	for (i in 1:8) {
 		for (j in 1:8) {
 			if(marked[i,j] == 1) {
-				if(i!=1 && (gems[i-1,j] == gems[i,j]) && marked[i-1,j]==0) {
+				if(i!=1 && (gems[i-1,j] == gems[i,j]) && marked[i-1,j]==0)
 				  marked[i-1, j] = 1
-				}
-			  if(i!=8 && (gems[i+1,j] == gems[i,j]) && marked[i+1,j]==0) {
+			  if(i!=8 && (gems[i+1,j] == gems[i,j]) && marked[i+1,j]==0)
 			    marked[i+1, j] = 1
-			  }
-			  if(j!=1 && (gems[i,j-1] == gems[i,j]) && marked[i,j-1]==0) {
+			  if(j!=1 && (gems[i,j-1] == gems[i,j]) && marked[i,j-1]==0)
 			    marked[i, j-1] = 1
-			  }
-			  if(j!=8 && (gems[i,j+1] == gems[i,j]) && marked[i,j+1]==0) {
+			  if(j!=8 && (gems[i,j+1] == gems[i,j]) && marked[i,j+1]==0)
 			    marked[i, j+1] = 1
-			  }
 			}
 		}
 	}
@@ -212,18 +192,15 @@ untwistgems <- function(goms, row, col) {
 
 refill <- function(ge) {
   for (z in 1:8) { #fall down 8 times
-    for (i in 1:8) {
-      for (j in 1:8) {
-        if(ge[i, j] == -1) {
+    for (i in 1:8)
+      for (j in 1:8)
+        if(ge[i, j] == -1)
           if(j==8) {
             ge[i,j] = sample(1:7, 1)
           } else {
             ge[i,j] = ge[i,j+1]
             ge[i,j+1] = -1
           }
-        }
-      }
-    }
   }
   return(ge)
 }
@@ -256,7 +233,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   click <- locator(1)
   plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = "", ylab = "", axes = FALSE, frame.plot = FALSE)
   
-  if((floor(click$x) > 1 && floor(click$x) < 7)){
+  if((floor(click$x) > 1 && floor(click$x) < 7) && menu > 0){
     if(floor(click$y) == 3)
       options[1] = !options[1]
     if(floor(click$y) == 2)
@@ -285,9 +262,8 @@ while(TRUE) {
 
 if(floor(click$x) == 0 && floor(click$y) == 0) {
   textboxes[2] = textboxes[2] + 1
-  if(legalmoves(gems) && options[2]){
+  if(legalmoves(gems) && options[2])
     textboxes[1] = textboxes[1] - 10
-  }
 
   gems <- resetboard()
   checked <- checkgems(gems)
@@ -302,12 +278,10 @@ if(floor(click$x) == 0 && floor(click$y) == 0) {
 #selection
 if(options[3]>0) { #twist
   if(selected[1] == -1 && menu != 0) { #pair 1
-    if(floor(click$x) > 0 && floor(click$x) < 9) {
+    if(floor(click$x) > 0 && floor(click$x) < 9)
       selected[1] = floor(click$x)
-    }
-    if(floor(click$y) > 0 && floor(click$y) < 9) {
+    if(floor(click$y) > 0 && floor(click$y) < 9)
       selected[2] = floor(click$y)
-    }
     if(selected[1]==8) selected[1] = 7
     if(selected[2]==8) selected[2] = 7
   } else if(floor(click$x) != selected[1] && floor(click$y) != selected[2]) {
@@ -318,15 +292,13 @@ if(options[3]>0) { #twist
       if(options[3]==1){
         tempgems <- twistgems(gems, selected[1], selected[2])
         tempcheck <- checkgems(tempgems)
-        if(length(tempcheck)>0) {
+        if(length(tempcheck)>0)
           gems <- tempgems
-        }
       } else {
         tempgems <- untwistgems(gems, selected[1], selected[2])
         tempcheck <- checkgems(tempgems)
-        if(length(tempcheck)>0) {
+        if(length(tempcheck)>0)
           gems <- tempgems
-        }
       }
     } else {
       if(options[3]==1)
@@ -347,19 +319,15 @@ if(options[3]>0) { #twist
   
 } else { #regular
     if(selected[1] == -1 && menu != 0) { #pair 1
-      if(floor(click$x) > 0 && floor(click$x) < 9) {
+      if(floor(click$x) > 0 && floor(click$x) < 9)
         selected[1] = floor(click$x)
-      }
-      if(floor(click$y) > 0 && floor(click$y) < 9) {
+      if(floor(click$y) > 0 && floor(click$y) < 9)
         selected[2] = floor(click$y)
-      }
     } else { #pair 2
-      if(floor(click$x) > 0 && floor(click$x) < 9) {
+      if(floor(click$x) > 0 && floor(click$x) < 9)
         selected[3] = floor(click$x)
-      }
-      if(floor(click$y) > 0 && floor(click$y) < 9) {
+      if(floor(click$y) > 0 && floor(click$y) < 9)
         selected[4] = floor(click$y)
-      }
     }
   }
   
@@ -370,9 +338,8 @@ if(options[3]>0) { #twist
       if(!options[1]){
         tempgems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
         tempcheck <- checkgems(tempgems)
-        if(length(tempcheck)>0) {
+        if(length(tempcheck)>0)
           gems <- tempgems
-        }
       } else {
         gems <- swapgems(gems, selected[1], selected[2], selected[3], selected[4])
       }
@@ -390,30 +357,24 @@ if(options[3]>0) { #twist
 #draw board
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = paste("Score:",textboxes[1]), ylab = paste("Resets:",textboxes[2]), axes = FALSE, frame.plot = FALSE)
 
-for (i in 1:8) {
-  for (j in 1:8) {
+for (i in 1:8)
+  for (j in 1:8)
     rect(i, j, i + 1, j + 1, col = gemColors[gems[i, j]], border = "black")
-  }
-}
 
 rect(0, 0, 1, 1, col = "purple", border = "white")
 text(0.5,0.5, "Rst")
 if(options[3]) {
-  if(selected[1] != -1 && selected[2] != -1) {
+  if(selected[1] != -1 && selected[2] != -1)
     rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 2.025, selected[2] + 2.05, col = "transparent" , border = "blue")
-  }
 } else {
-  if(selected[1] != -1 && selected[2] != -1) {
+  if(selected[1] != -1 && selected[2] != -1)
     rect(selected[1]-0.05, selected[2]-0.05, selected[1] + 1.05, selected[2] + 1.05, col = gemColors[gems[selected[1], selected[2]]], border = "blue")
-  }
 }
 
-if(!legalmoves(gems)){
+if(!legalmoves(gems))
   text(5,0.5, "No legal moves! Reset")
-}
 
 menu <- 1
 
 click <- locator(1)
-
 }
