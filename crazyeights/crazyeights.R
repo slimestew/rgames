@@ -106,21 +106,27 @@ wildColor <- function() {
 validCard <- function(card) {
   suit <- card[[1]][[1]]
   valu <- card[[1]][[2]]
-  return( (suit == stack[[length(stack)]][[1]][[1]] && !wildcard) || valu == stack[[length(stack)]][[1]][[2]] || valu == "C" ||
+  return( (suit == stack[[length(stack)]][[1]][[1]] && !wildcard && !abs(drawCount)>0) || valu == stack[[length(stack)]][[1]][[2]] || valu == "C" ||
           valu == "F" || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
-}
-
-doAI <- function() {
-  while(turnorder[2]!=1){
-    
-   nextPlayer() 
-  }
 }
 
 nextPlayer <- function() {
   if(turnorder[1])
     return((turnorder[2] %% (options[4]+2)) + 1)
   return(((turnorder[2]-2) %% (options[4]+2)) + 1)
+}
+
+#moveCard <- function(li1, li2, pos=length(li2), quantity=1) {
+#  if(quantity>1)
+#    moveCard(li1,li2,pos,quantity-1)
+#  return(list(c(li1, list(li2[pos][1])), li2[-pos]))
+#}
+
+doAI <- function() {
+  while(turnorder[2]!=1){
+    
+   turnorder[2] = nextPlayer() 
+  }
 }
 
 #menu
@@ -180,12 +186,14 @@ stack <- list(deck[temp][1])
 deck <- deck[-temp]
 
 # add card
-hands[[1]] <- c(hands[[1]], list(list(list(1,"8"))))
+hands[[1]] <- c(hands[[1]], list(list(list(1,"2"))))
+hands[[1]] <- c(hands[[1]], list(list(list(2,"2"))))
 
 #game loop
 while(win) {
 
 if(menu>0){
+  
   if(floor(click$x) > 0 && floor(click$x) < 9 && floor(click$y) > -1 && floor(click$y) < 3) #selection
     selected <- floor(click$x)
   
@@ -226,7 +234,7 @@ if(menu>0){
         if(stack[[length(stack)]][[1]][[2]] == "2")
           drawCount <- drawCount+2
         if(stack[[length(stack)]][[1]][[2]] == "A"){
-          drawCount <- drawCount+4
+          drawCount <- drawCount-4
           wildcard <- wildColor()
         }
       } else if(options[1] >= 2){
@@ -239,7 +247,7 @@ if(menu>0){
         if(stack[[length(stack)]][[1]][[2]] == "T")
           drawCount <- drawCount+2
         if(stack[[length(stack)]][[1]][[2]] == "F"){
-          drawCount <- drawCount+4
+          drawCount <- drawCount-4
           wildcard <- wildColor()
         }
       }
@@ -274,6 +282,12 @@ if(!pause){
       text(1.5+i, 7.5, length(hands[[i+1]]))
     }
   }
+  
+  if(drawCount!=0){ # +2 and +4s
+      symbols(1.5, 5, circles = 0.5, inches = FALSE, add = TRUE, bg = "black", fg="brown")
+      text(1.5,5, paste("+",abs(drawCount), sep=""), col="white")
+  }
+  
   if(wildcard){
     if(options[1]<2){ #colors/cards
       symbols(6.5, 5, circles = 0.5, inches = FALSE, add = TRUE, bg = "white", fg="brown")
