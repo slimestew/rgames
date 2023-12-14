@@ -1,16 +1,16 @@
 # rgames
 games and things made in R
 
-these all have graphics!!! should work anywhere that supports the plotter and locator (ie not CLI unless stated. but that's boring)
+these all have graphics!!! should work anywhere that supports the plotter and locator (ie not CLI except for ed)
 
-**Windows**
+**RStudio**
 
 wow it works that's crazy!!!!!! i love rstudio
 
-**Linux CLI**
+**CLI**
 
-do ``X11()`` first DUMMY but found no actual issues so far
+``X11()`` works on linux but also windows but only ``windows()`` works on windows
 
-**Mac**
+**Other**
 
-h
+w
