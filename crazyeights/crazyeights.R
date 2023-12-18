@@ -5,8 +5,9 @@ cards <- list() #all cards, shuffles
 deck <- list() #draw pile
 stack <- list() #play pile
 wildcard <- 0 #wildcard
-drawCount <- 0 #+2 and +4
+drawCount <- -1 #+2 and +4
 selected <- 0
+handOffset <- 0
 pause <- FALSE
 menu <- 0
 win <- TRUE
@@ -87,10 +88,10 @@ dispCard <- function(x, y, card) {
 wildColor <- function() {
   rect(0,0,10,3, col="#a52a2a80", border="transparent")
   while(TRUE){
-    dispCard(1, 1, list(list(1, " ")))
-    dispCard(3, 1, list(list(2, " ")))
-    dispCard(5, 1, list(list(3, " ")))
-    dispCard(7, 1, list(list(4, " ")))
+    dispCard(1, 2, list(list(1, " ")))
+    dispCard(3, 2, list(list(2, " ")))
+    dispCard(5, 2, list(list(3, " ")))
+    dispCard(7, 2, list(list(4, " ")))
     click <- locator(1)
     if(floor(click$x) < 2)
       return(1)
@@ -106,7 +107,7 @@ wildColor <- function() {
 validCard <- function(card) {
   suit <- card[[1]][[1]]
   valu <- card[[1]][[2]]
-  return( (suit == stack[[length(stack)]][[1]][[1]] && !wildcard && !abs(drawCount)>0) || valu == stack[[length(stack)]][[1]][[2]] || valu == "C" ||
+  return( (suit == stack[[length(stack)]][[1]][[1]] && !wildcard && drawCount<0) || valu == stack[[length(stack)]][[1]][[2]] || valu == "C" ||
           valu == "F" || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
 }
 
@@ -176,18 +177,22 @@ for(i in 1:(options[4]+2)){
     hand<-5
   
   for(j in 1:hand){
-    temp <- sample(length(deck), 1)
+    temp <- sample(length(deck), 1) #don't need to sample here, already randomized
     hands[[i]] <- c(hands[[i]], list(deck[temp][1]))
     deck <- deck[-temp]
   }
 }
-temp <- sample(length(deck), 1)
+temp <- sample(length(deck), 1) #don't need to sample here, already randomized
 stack <- list(deck[temp][1])
 deck <- deck[-temp]
 
 # add card
-hands[[1]] <- c(hands[[1]], list(list(list(1,"2"))))
-hands[[1]] <- c(hands[[1]], list(list(list(2,"2"))))
+# hands[[1]] <- c(hands[[1]], list(list(list(1,"2"))))
+# hands[[1]] <- c(hands[[1]], list(list(list(2,"2"))))
+if(stack[[length(stack)]][[1]][[2]] == "C" || stack[[length(stack)]][[1]][[2]] == "T" || stack[[length(stack)]][[1]][[2]] == "F"){
+  stack <- c(stack, list(deck[length(deck)][1]))
+  deck <- deck[-length(deck)]
+}
 
 #game loop
 while(win) {
@@ -197,59 +202,80 @@ if(menu>0){
   if(floor(click$x) > 0 && floor(click$x) < 9 && floor(click$y) > -1 && floor(click$y) < 3) #selection
     selected <- floor(click$x)
   
+  if(floor(click$x) > 8 && floor(click$y) > -1 && floor(click$y) < 3 && length(hands[[turnorder[2]]]) > (handOffset+8)){
+    handOffset <- handOffset+8
+    selected <- 0
+  }
+  
+  if(floor(click$x) < 1 && floor(click$y) > -1 && floor(click$y) < 3 && handOffset > 0){
+    handOffset <- handOffset-8
+    selected <- 0
+  }
+  
   if(floor(click$x) > 4 && floor(click$x) < 6 && floor(click$y) > 3 && floor(click$y) < 6 && selected[1]){ #play card
-    if(validCard(hands[[turnorder[2]]][[selected]])){
-      stack <- c(stack, list(hands[[turnorder[2]]][[selected]]))
-      hands[[turnorder[2]]] <- hands[[turnorder[2]]][-selected]
+    if(validCard(hands[[turnorder[2]]][[selected+handOffset]])){
+      stack <- c(stack, list(hands[[turnorder[2]]][[selected+handOffset]]))
+      hands[[turnorder[2]]] <- hands[[turnorder[2]]][-(selected+handOffset)]
+      
       if(wildcard)
         wildcard <- 0
+      
+      #TODO: move everything besides +2 and +4 in here so it doesn't refire on drawn cards
+      if(options[1] == 0 && stack[[length(stack)]][[1]][[2]] == "8") #crazy eights
+          wildcard <- wildColor()
+      if(options[1] == 1) { #last card
+        if(stack[[length(stack)]][[1]][[2]] == "J" || stack[[length(stack)]][[1]][[2]] == "A")
+          wildcard <- wildColor()
+        if(drawCount == -1 && (stack[[length(stack)]][[1]][[2]] == "2" || stack[[length(stack)]][[1]][[2]] == "A"))
+          drawCount <- 0
+      }
+      if(options[1] >= 2){ #one and other one
+        if(stack[[length(stack)]][[1]][[2]] == "C" || stack[[length(stack)]][[1]][[2]] == "F")
+          wildcard <- wildColor()
+        if(drawCount == -1 && (stack[[length(stack)]][[1]][[2]] == "T" || stack[[length(stack)]][[1]][[2]] == "F"))
+          drawCount <- 0
+      }
       turnorder[3] <- TRUE
       selected <- -1
+      handOffset <- 0
     } else {
       selected <- 0
     }
   }
     
   if(floor(click$x) > 2 && floor(click$x) < 5 && floor(click$y) > 3 && floor(click$y) < 5){ #draw card
-    hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], list(deck[length(deck)][1]))
-    deck <- deck[-length(deck)]
+    hand <- max(1, drawCount)
+    for(i in 1:hand){
+      hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], list(deck[length(deck)][1]))
+      deck <- deck[-length(deck)]
+    }
     selected <- -1
+    drawCount <- -1
   }
   
   if(length(hands[[turnorder[2]]]) == 0)
     win <-FALSE
   
-  if(selected == -1 && win){  #do actions if game isnt over
-    if(turnorder[3])
+  if(selected == -1 && win && turnorder[3]){  #do additional actions
       if(options[1] == 0){ #crazy eights
-        if(stack[[length(stack)]][[1]][[2]] == "8")
-          wildcard <- wildColor()
         if(stack[[length(stack)]][[1]][[2]] == "Q" && options[2])
           turnorder[2] <- nextPlayer()
       } else if(options[1] == 1){
         if(stack[[length(stack)]][[1]][[2]] == "8")
           turnorder[2] <- nextPlayer()
-        if(stack[[length(stack)]][[1]][[2]] == "J")
-          wildcard <- wildColor()
-        if(stack[[length(stack)]][[1]][[2]] == "2")
+        if(stack[[length(stack)]][[1]][[2]] == "2" && drawCount >= 0)
           drawCount <- drawCount+2
-        if(stack[[length(stack)]][[1]][[2]] == "A"){
-          drawCount <- drawCount-4
-          wildcard <- wildColor()
-        }
+        if(stack[[length(stack)]][[1]][[2]] == "A" && drawCount >= 0)
+          drawCount <- drawCount+4
       } else if(options[1] >= 2){
         if(stack[[length(stack)]][[1]][[2]] == "S")
           turnorder[2] <- nextPlayer()
         if(stack[[length(stack)]][[1]][[2]] == "R")
           turnorder[1] <- !turnorder[1]
-        if(stack[[length(stack)]][[1]][[2]] == "C")
-          wildcard <- wildColor()
-        if(stack[[length(stack)]][[1]][[2]] == "T")
+        if(stack[[length(stack)]][[1]][[2]] == "T" && drawCount >= 0)
           drawCount <- drawCount+2
-        if(stack[[length(stack)]][[1]][[2]] == "F"){
-          drawCount <- drawCount-4
-          wildcard <- wildColor()
-        }
+        if(stack[[length(stack)]][[1]][[2]] == "F" && drawCount >= 0)
+          drawCount <- drawCount+4
       }
     
     if(!options[3])
@@ -283,7 +309,20 @@ if(!pause){
     }
   }
   
-  if(drawCount!=0){ # +2 and +4s
+  text(0.5, 3, length(hands[[turnorder[2]]]), col="tan") 
+  
+  if(length(hands[[turnorder[2]]]) > handOffset+8){
+    symbols(9.5, 1, circles = 0.5, inches = FALSE, add = TRUE, bg = "white", fg="brown")
+    text(9.5, 1, ">", col="black") 
+  }
+  
+  if(handOffset > 0){
+    symbols(0.5, 1, circles = 0.5, inches = FALSE, add = TRUE, bg = "white", fg="brown")
+    text(0.5, 1, "<", col="black")
+  }
+    
+  
+  if(drawCount>0){ # +2 and +4s
       symbols(1.5, 5, circles = 0.5, inches = FALSE, add = TRUE, bg = "black", fg="brown")
       text(1.5,5, paste("+",abs(drawCount), sep=""), col="white")
   }
@@ -303,8 +342,8 @@ if(!pause){
   dispCard(5, 4, stack[[length(stack)]])
     
   if(win)
-    for(i in 1:length(hands[[turnorder[2]]])) #display cards(how to order? spaced out if few, navbars if many)
-      dispCard(i, (selected==i), hands[[turnorder[2]]][[i]])
+    for(i in (1+handOffset):min(length(hands[[turnorder[2]]]), handOffset+8))
+      dispCard(i-handOffset, ((selected+handOffset)==i), hands[[turnorder[2]]][[i]])
 
 } else {
   text(4,4, paste("Click for Player",turnorder[2]))
@@ -318,6 +357,7 @@ click <- locator(1)
 if(pause)
   pause <- FALSE
 }
+
 if(!options[3] || (length(hands[[1]]) == 0 && options[3])){
   text(5,3, "You win!")
 } else {
