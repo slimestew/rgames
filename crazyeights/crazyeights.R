@@ -16,8 +16,8 @@ click <- list(x = 3, y = 3)
 textboxes <- list(0,0)
 options <- c(0, 0, 0, 0)
 # Variants:
-#     Crazy Eights(standard deck, no power cards, score based)
-#     Last Card(standard deck, power cards, shedding wins)
+#     Crazy Eights(standard deck, minimal power cards, score based)
+#     Last Card(standard deck, some power cards, shedding wins)
 #     One(unique deck, power cards, shedding wins)
 #     Other One(unique deck, power cards, can challenge +4, shedding wins)
 # Queen Swap: (only for Crazy Eights)
@@ -56,8 +56,8 @@ unpack <- function() {
 }
 
 dispCard <- function(x, y, card) {
-  suit <- card[[1]][[1]]
-  valu <- card[[1]][[2]]
+  suit <- card[[1]]
+  valu <- card[[2]]
   rect(x,y,x+1,y+2, col="white", border="black")
   if(options[1]<2) { #colors/cards
     text(x+0.5,y+1.5, suits[suit], col=suitColors[suit])
@@ -88,10 +88,10 @@ dispCard <- function(x, y, card) {
 wildColor <- function() {
   rect(0,0,10,3, col="#a52a2a80", border="transparent")
   while(TRUE){
-    dispCard(1, 2, list(list(1, " ")))
-    dispCard(3, 2, list(list(2, " ")))
-    dispCard(5, 2, list(list(3, " ")))
-    dispCard(7, 2, list(list(4, " ")))
+    dispCard(1, 2, list(1, " "))
+    dispCard(3, 2, list(2, " "))
+    dispCard(5, 2, list(3, " "))
+    dispCard(7, 2, list(4, " "))
     click <- locator(1)
     if(floor(click$x) < 2)
       return(1)
@@ -105,9 +105,9 @@ wildColor <- function() {
 }
 
 validCard <- function(card) {
-  suit <- card[[1]][[1]]
-  valu <- card[[1]][[2]]
-  return( (suit == stack[[length(stack)]][[1]][[1]] && !wildcard && drawCount<0) || valu == stack[[length(stack)]][[1]][[2]] || valu == "C" ||
+  suit <- card[[1]]
+  valu <- card[[2]]
+  return( (suit == stack[[length(stack)]][[1]] && !wildcard && drawCount<0) || valu == stack[[length(stack)]][[2]] || valu == "C" ||
           valu == "F" || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
 }
 
@@ -117,17 +117,30 @@ nextPlayer <- function() {
   return(((turnorder[2]-2) %% (options[4]+2)) + 1)
 }
 
-#moveCard <- function(li1, li2, pos=length(li2), quantity=1) {
-#  if(quantity>1)
-#    moveCard(li1,li2,pos,quantity-1)
-#  return(list(c(li1, list(li2[pos][1])), li2[-pos]))
-#}
-
-doAI <- function() {
+doAI <- function(deck, hands, stack, wildcard, drawCount) {
+  turnOver <- FALSE
   while(turnorder[2]!=1){
-    
-   turnorder[2] = nextPlayer() 
+    for(i in 1:length(hands[[turnorder[2]]])){ #play
+      if(validCard(hands[[turnorder[2]]][[i]])){
+        stack <- c(stack, list(hands[[turnorder[2]]][[i]]))
+        hands[[turnorder[2]]] <- hands[[turnorder[2]]][-(i)]
+        wildcard <- 0
+        turnOver <- TRUE
+        break
+      }
+      #TODO: power cards
+    }
+      if(!turnOver){ #draw
+        hand <- max(1, drawCount)
+        for(i in 1:hand){
+          hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], deck[length(deck)][1])
+          deck <- deck[-length(deck)]
+        }
+        drawCount <- -1
+      }
+    turnorder[2] <- nextPlayer() 
   }
+  return(list(deck, hands, stack, wildcard, drawCount))
 }
 
 #menu
@@ -178,19 +191,19 @@ for(i in 1:(options[4]+2)){
   
   for(j in 1:hand){
     temp <- sample(length(deck), 1) #don't need to sample here, already randomized
-    hands[[i]] <- c(hands[[i]], list(deck[temp][1]))
+    hands[[i]] <- c(hands[[i]], deck[temp][1])
     deck <- deck[-temp]
   }
 }
 temp <- sample(length(deck), 1) #don't need to sample here, already randomized
-stack <- list(deck[temp][1])
+stack <- deck[temp][1]
 deck <- deck[-temp]
 
 # add card
 # hands[[1]] <- c(hands[[1]], list(list(list(1,"2"))))
 # hands[[1]] <- c(hands[[1]], list(list(list(2,"2"))))
-if(stack[[length(stack)]][[1]][[2]] == "C" || stack[[length(stack)]][[1]][[2]] == "T" || stack[[length(stack)]][[1]][[2]] == "F"){
-  stack <- c(stack, list(deck[length(deck)][1]))
+if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"){
+  stack <- c(stack, deck[length(deck)][1])
   deck <- deck[-length(deck)]
 }
 
@@ -220,19 +233,26 @@ if(menu>0){
       if(wildcard)
         wildcard <- 0
       
-      #TODO: move everything besides +2 and +4 in here so it doesn't refire on drawn cards
-      if(options[1] == 0 && stack[[length(stack)]][[1]][[2]] == "8") #crazy eights
+      if(options[1] == 0){  #crazy eights
+        if(stack[[length(stack)]][[2]] == "8")
           wildcard <- wildColor()
-      if(options[1] == 1) { #last card
-        if(stack[[length(stack)]][[1]][[2]] == "J" || stack[[length(stack)]][[1]][[2]] == "A")
+        if(stack[[length(stack)]][[2]] == "Q" && options[2])
+          turnorder[2] <- nextPlayer()
+      } else if(options[1] == 1) { #last card
+        if(stack[[length(stack)]][[2]] == "8")
+          turnorder[2] <- nextPlayer()
+        if(stack[[length(stack)]][[2]] == "J" || stack[[length(stack)]][[2]] == "A")
           wildcard <- wildColor()
-        if(drawCount == -1 && (stack[[length(stack)]][[1]][[2]] == "2" || stack[[length(stack)]][[1]][[2]] == "A"))
+        if(drawCount == -1 && (stack[[length(stack)]][[2]] == "2" || stack[[length(stack)]][[2]] == "A"))
           drawCount <- 0
-      }
-      if(options[1] >= 2){ #one and other one
-        if(stack[[length(stack)]][[1]][[2]] == "C" || stack[[length(stack)]][[1]][[2]] == "F")
+      } else if(options[1] >= 2){ #one and other one
+        if(stack[[length(stack)]][[2]] == "S")
+          turnorder[2] <- nextPlayer()
+        if(stack[[length(stack)]][[2]] == "R")
+          turnorder[1] <- !turnorder[1]
+        if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "F")
           wildcard <- wildColor()
-        if(drawCount == -1 && (stack[[length(stack)]][[1]][[2]] == "T" || stack[[length(stack)]][[1]][[2]] == "F"))
+        if(drawCount == -1 && (stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"))
           drawCount <- 0
       }
       turnorder[3] <- TRUE
@@ -243,10 +263,16 @@ if(menu>0){
     }
   }
     
-  if(floor(click$x) > 2 && floor(click$x) < 5 && floor(click$y) > 3 && floor(click$y) < 5){ #draw card
+  if(floor(click$x) > 2 && floor(click$x) < 5 && click$y > 3.5 && click$y <= 5){ #draw card
+    if(length(deck) == 0){
+      #TODO: get everything but last card, shuffle deck
+      if(options[1]==0){
+        #TODO: if crazy eights, give score to lowest player
+      }
+    }
     hand <- max(1, drawCount)
     for(i in 1:hand){
-      hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], list(deck[length(deck)][1]))
+      hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], deck[length(deck)][1])
       deck <- deck[-length(deck)]
     }
     selected <- -1
@@ -256,25 +282,16 @@ if(menu>0){
   if(length(hands[[turnorder[2]]]) == 0)
     win <-FALSE
   
-  if(selected == -1 && win && turnorder[3]){  #do additional actions
-      if(options[1] == 0){ #crazy eights
-        if(stack[[length(stack)]][[1]][[2]] == "Q" && options[2])
-          turnorder[2] <- nextPlayer()
-      } else if(options[1] == 1){
-        if(stack[[length(stack)]][[1]][[2]] == "8")
-          turnorder[2] <- nextPlayer()
-        if(stack[[length(stack)]][[1]][[2]] == "2" && drawCount >= 0)
+  if(selected == -1 && win && turnorder[3]){  #drawing cards
+      if(options[1] == 1){
+        if(stack[[length(stack)]][[2]] == "2" && drawCount >= 0)
           drawCount <- drawCount+2
-        if(stack[[length(stack)]][[1]][[2]] == "A" && drawCount >= 0)
+        if(stack[[length(stack)]][[2]] == "A" && drawCount >= 0)
           drawCount <- drawCount+4
       } else if(options[1] >= 2){
-        if(stack[[length(stack)]][[1]][[2]] == "S")
-          turnorder[2] <- nextPlayer()
-        if(stack[[length(stack)]][[1]][[2]] == "R")
-          turnorder[1] <- !turnorder[1]
-        if(stack[[length(stack)]][[1]][[2]] == "T" && drawCount >= 0)
+        if(stack[[length(stack)]][[2]] == "T" && drawCount >= 0)
           drawCount <- drawCount+2
-        if(stack[[length(stack)]][[1]][[2]] == "F" && drawCount >= 0)
+        if(stack[[length(stack)]][[2]] == "F" && drawCount >= 0)
           drawCount <- drawCount+4
       }
     
@@ -284,8 +301,18 @@ if(menu>0){
     selected <- 0
   }
   
-  if(options[3])
-    doAI()
+  if(options[3] && turnorder[2]!=1){
+    AI <- doAI(deck, hands, stack, wildcard, drawCount)
+    deck <- AI[[1]]
+    hands <- AI[[2]]
+    stack <- AI[[3]]
+    wildcard <- AI[[4]]
+    drawCount <- AI[[5]]
+    if(any(sapply(hands, length) == 0))
+      win <- TRUE
+    pause <- TRUE
+    turnorder[2] <- 1
+  }
 }
   
 plot(0, 0, type = "n", xlim = c(0, 10), ylim = c(0, 10), xlab = ifelse(options[1]==0,paste("Score:",textboxes),""), ylab = "", axes = FALSE, frame.plot = FALSE)
@@ -294,18 +321,16 @@ rect(0,-2,10,6, col="brown", border="black")
 
 if(!pause){
   
-  for(i in floor(length(deck)/8):1) #todo: make this fall properly
+  for(i in floor(length(deck)/8):1) #TODO: make this fall properly
     rect(3,4-(i*0.1),5,5-(i*0.1), col="chartreuse4", border="black")
   rect(3,4,5,5, col="chartreuse3", border="black")
   rect(3.25,4.25,4.75,4.75, col="chartreuse4", border="white") 
   
-  for(i in 1:(options[4]+1)){
-    rect(1+i,8,2+i,10, col="chartreuse3", border="black")
-    rect(1.25+i,8.25,1.75+i,9.75, col="chartreuse4", border="white")
-    if(i>=turnorder[2]+1){
-      text(1.5+i, 7.5, length(hands[[i]]))
-    } else {
-      text(1.5+i, 7.5, length(hands[[i+1]]))
+  for(i in 1:(options[4]+2)){
+    if(i != turnorder[2]){
+    rect((i < turnorder[2])+i,8,i+1+(i < turnorder[2]),10, col="chartreuse3", border="black")
+    rect(i+0.25+(i < turnorder[2]),8.25,i+0.75+(i < turnorder[2]),9.75, col="chartreuse4", border="white")
+    text(i+0.5+(i < turnorder[2]), 7.5, length(hands[[i]]))
     }
   }
   
@@ -341,9 +366,16 @@ if(!pause){
   }
   dispCard(5, 4, stack[[length(stack)]])
     
-  if(win)
+  if(win){
     for(i in (1+handOffset):min(length(hands[[turnorder[2]]]), handOffset+8))
       dispCard(i-handOffset, ((selected+handOffset)==i), hands[[turnorder[2]]][[i]])
+    
+    if(options[1]==0 && any(textboxes >= ((2+options[4])*50))){
+      text(4,4, paste("Tallying points",turnorder[2]))
+      win <- FALSE
+      click <- locator(1)
+    }
+  }
 
 } else {
   text(4,4, paste("Click for Player",turnorder[2]))

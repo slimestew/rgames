@@ -7,9 +7,9 @@ turn <- 1
 fiarColors <- c("red", "yellow", "blue", "green", "orange", "cyan", "purple", "white", "pink", "chartreuse", "tan", "darkorange4")
 
 dropp <- function(col, player){
-  for(r in 1:6)
-    if(board[col,r]==0){
-      board[col,r] <- player
+  for(r in 6:1)
+    if(board[r,col]==0){
+      board[r,col] <- player
       return(board)
     }
   return(NA)
@@ -20,7 +20,7 @@ checkwin <- function(){
     if(any(apply(embed(board[i,], 4), 1, function(r) (all(r==r[1]) && r[1]!=0)))) #if all in a row subset are equal and not 0
       return(TRUE)
   for(i in 1:7)
-    if(any(apply(embed(board[,i], 4), 2, function(r) (all(r==r[1]) && r[1]!=0)))) #columns
+    if(any(apply(embed(board[,i], 3), 2, function(r) (all(r==r[1]) && r[1]!=0)))) #columns
        return(TRUE)
   return(FALSE)
 }
@@ -72,9 +72,9 @@ while(!checkwin()) {
   
   plot(0, 0, type = "n", xlim = c(1, 8), ylim = c(1, 7), col="white", xlab = paste("Player ", turn, "'s turn", sep=""), ylab = "", axes = FALSE, frame.plot = FALSE)
   
-  for(i in 1:6)
-    for(j in 1:7)
-      rect(j, i, j + 1, i + 1, col = ifelse(board[j,i]==0, fiarColors[options[3]+1], ifelse(board[j,i]==1, fiarColors[options[1]+1], fiarColors[options[2]+1])), border = "black")
+  for(i in 1:7)
+    for(j in 1:6)
+      rect(i, -j + 8, i + 1, -j + 7, col = ifelse(board[j,i]==0, fiarColors[options[3]+1], ifelse(board[j,i]==1, fiarColors[options[1]+1], fiarColors[options[2]+1])), border = "black")
   
   menu <- 1
   if(!checkwin())
@@ -84,9 +84,9 @@ while(!checkwin()) {
 turn <- 3 - turn
 
 plot(0, 0, type = "n", xlim = c(1, 8), ylim = c(1, 7), col="white", xlab = paste("Player ", turn, "'s turn", sep=""), ylab = "", axes = FALSE, frame.plot = FALSE)
-for(i in 1:6)
-  for(j in 1:7)
-    rect(j, i, j + 1, i + 1, col = ifelse(board[j,i]==0, fiarColors[options[3]+1], ifelse(board[j,i]==1, fiarColors[options[1]+1], fiarColors[options[2]+1])), border = "black")
+for(i in 1:7)
+  for(j in 1:6)
+    rect(i, -j + 8, i + 1, -j + 7, col = ifelse(board[j,i]==0, fiarColors[options[3]+1], ifelse(board[j,i]==1, fiarColors[options[1]+1], fiarColors[options[2]+1])), border = "black")
 
 rect(2,2.5,6,6.5, col="white")
 text(4,4, paste("Player ", turn))
