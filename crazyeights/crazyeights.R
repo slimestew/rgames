@@ -25,7 +25,7 @@ options <- c(0, 0, 0, 0)
 # 0's and 7's (only for One and Other One)
 #     Playing a 7 allows the player to swap hands with someone else
 #     Playing a 0 swaps all hands one over by turn order.
-# AI or Human opponents
+# Computer or Human opponents
 # Number of players
 hands <- matrix()
 stVals <- c("1","2","3","4","5","6","7","8","9","J","Q","K","A")
@@ -146,7 +146,12 @@ doAI <- function(deck, hands, stack, wildcard, drawCount) {
 #menu
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by slimestew", ylab = "", axes = FALSE, frame.plot = TRUE)
 par(bg = "navajowhite")
-text(5,5, "Crazy Eights (for R)")
+for(i in 1:4){
+  rect(i*2-1,6,i*2,8, col="white", border="black")
+  text(i*2-0.5,7.5, suits[i], col=suitColors[i])
+  text(i*2-0.5,6.5, "8")
+}
+text(4.5,5, "Crazy Eights (for R)")
 
 while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   click <- locator(1)
@@ -171,7 +176,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   text(4,8, "Crazy Eights")
   text(4,3.5, variants[options[1]+1])
   text(4,2.5, ifelse(options[1]<2, ifelse(options[1]," ","Queen Skip"),"0s and 7s"))
-  text(4,1.5, ifelse(options[3],"AI","Human"))
+  text(4,1.5, ifelse(options[3],"CPU","Human"))
   text(4,0.5, options[4]+2)
   text(4,5.5, "Start")
   

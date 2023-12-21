@@ -11,10 +11,10 @@
 |:-----------------|-------------|:----------|
 | Gems Game        | gemsgame    | Complete  |
 | Crazy Eights     | crazyeights | Playable  |
-| For-in-a-Row     | fiar        | WIP       |
+| Four-in-a-Row    | fiar        | Complete  |
 | text Editor      | text/text   | Abandoned |
 | ed Editor (CLI)  | text/ed     | WIP       |
-| Tic Tac Toe      | tictactoe   | Empty     |
+| Tic Tac Toe      | tictactoe   | Playable  |
 | Chess            | chess       | Empty     |
 | Checkers         | checkers    | Empty     |
 | Mancala          | mancala     | Empty     |
