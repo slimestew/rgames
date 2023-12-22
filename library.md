@@ -32,5 +32,6 @@
 | Ship Destroyer   | shipgame    | Empty     |
 | Sliding Puzzle   | slidingpuzz | Empty     |
 | Warehouse Keeper | warehouse   | Empty     |
+| Minesweeper      | minesweeper | Empty     |
 | R-playing Game   | rpg         | Empty     |
 | Rsynth           | synth       | Empty     |
