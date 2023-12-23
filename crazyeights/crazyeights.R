@@ -107,8 +107,8 @@ wildColor <- function() {
 validCard <- function(card) {
   suit <- card[[1]]
   valu <- card[[2]]
-  return( (suit == stack[[length(stack)]][[1]] && !wildcard && drawCount<0) || valu == stack[[length(stack)]][[2]] || valu == "C" ||
-          valu == "F" || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
+  return((suit == stack[[length(stack)]][[1]] && !wildcard) || valu == stack[[length(stack)]][[2]] || (valu == "C" && drawCount<0) ||
+          (valu == "F" && drawCount<0)  || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
 }
 
 nextPlayer <- function() {
@@ -281,6 +281,7 @@ if(menu>0){
       deck <- deck[-length(deck)]
     }
     selected <- -1
+    handOffset <- 0
     drawCount <- -1
   }
   

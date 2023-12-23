@@ -5,12 +5,12 @@ turn <- 1
 menu <- 0
 click <- list(x = 3, y = 3)
 textboxes <- c(0,0)
-options <- c(FALSE, 0, FALSE)
+options <- c(FALSE, 0, 0)
 # Classic or Advanced
 #   In Advanced, you can place an X, O, or Microboard in a square
 #   If a microboard is 
 # Colors: Red/Blue Orange/Cyan Purple/Yellow green/pink
-# Computer or Human
+# Computer or Human  (computer can go first or second)
 btnColorsb <- c("red","orange", "purple", "green")
 btnColorsf <- c("blue","cyan", "yellow", "pink2")
 
@@ -65,7 +65,7 @@ plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 3), col="white", xlab = "", y
 menu <- 0
 
 #game loop
-while(!checkwin() && any(board == 0)) {
+while(!checkwin() && any(boards[1,,] == 0)) {
   
   if(floor(click$x)<3 && floor(click$x)>-1){
     if(floor(click$y)<3 && floor(click$y)>-1){
@@ -121,4 +121,43 @@ while(!checkwin() && any(board == 0)) {
   menu <- 1
   
   click <- locator(1)
+}
+
+#draw board
+if(sub > 0){
+  plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 3), xlab = paste("Player ", turn, "'s turn, Board", sub, sep=""), ylab = "Back", axes = FALSE, frame.plot = FALSE)
+} else {
+  plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 3), xlab = paste("Player ", turn, "'s turn", sep=""), ylab = "", axes = FALSE, frame.plot = FALSE)
+}
+
+for(i in 1:2){
+  lines(c(i,i),c(0,3), lwd=4)
+  lines(c(0,3),c(i,i), lwd=4)
+}
+
+for(i in 1:3)
+  for(j in 1:3)
+    if(boards[1,i,j] == 1){
+      lines(c(i-0.8,i-0.2),c(j-0.8,j-0.2), col= btnColorsb[options[1]+1], lwd=4)
+      lines(c(i-0.8,i-0.2),c(j-0.2,j-0.8), col= btnColorsb[options[1]+1], lwd=4)
+    } else if(boards[1,i,j] == 2){
+      symbols(i-0.5, j-0.5, circles = 0.25, add = TRUE, bg = "transparent", fg=btnColorsf[options[1]+1], inches = FALSE, lwd=4)
+    } else if(boards[1,i,j] == -1){
+      lines(c(i-0.4,i-0.4),c(j-0.8,j-0.2), col="gray20", lwd=4)
+      lines(c(i-0.6,i-0.6),c(j-0.2,j-0.8), col="gray20", lwd=4)
+      lines(c(i-0.2,i-0.8),c(j-0.4,j-0.4), col="gray20", lwd=4)
+      lines(c(i-0.2,i-0.8),c(j-0.6,j-0.6), col="gray20", lwd=4)
+      #TODO: inner symbols
+    }
+
+turn <- 3 - turn
+
+rect(1,1,2,2, col="#d9d9d980", border="transparent")
+if(!options[3] || turn==options[3]){
+  if(checkwin())
+    text(1.5,1.5, "You win!")
+  else
+    text(1.5,1.5, "Draw")
+} else {
+  text(1.5,1.5, "Game Over")
 }
