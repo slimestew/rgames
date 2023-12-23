@@ -26,12 +26,13 @@
 | Towers of Hanoi  | hanoi       | Empty     |
 | Go Fish          | gofish      | Empty     |
 | Hangman          | hangman     | Empty     |
-| R-dle            | rordle      | Empty     |
+| R-dle (CLI)      | rordle      | Complete  |
 | Poker            | poker       | Empty     |
 | 2048             | 2048        | Empty     |
 | Ship Destroyer   | shipgame    | Empty     |
 | Sliding Puzzle   | slidingpuzz | Empty     |
 | Warehouse Keeper | warehouse   | Empty     |
 | Minesweeper      | minesweeper | Empty     |
+| Point n Click    | pointnclick | Empty     |
 | R-playing Game   | rpg         | Empty     |
 | Rsynth           | synth       | Empty     |
