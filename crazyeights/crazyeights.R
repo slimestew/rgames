@@ -143,6 +143,37 @@ doAI <- function(deck, hands, stack, wildcard, drawCount) {
   return(list(deck, hands, stack, wildcard, drawCount))
 }
 
+rotateHands <- function(hands){
+  if(turnorder[2])
+    return( c(hands[options[4]+2], hands[1:(options[4]+1)]) )
+  return( c(hands[2:(options[4]+2)], hands[1]) )
+}
+
+swapHands <- function(hands, a, b){
+  temp <- hands[a]
+  hands[a] <- hands[b]
+  hands[b] <- temp
+  return(hands)
+}
+
+swapUI <- function(hands, player){
+  rect(0,0,10,3, col="#a52a2a80", border="transparent")
+  while(TRUE){
+    for(i in 1:(options[4]+2)){
+      if(i != turnorder[2]){
+        rect((i < turnorder[2])+i,8,i+1+(i < turnorder[2]),10, col="chartreuse3", border="black")
+        rect(i+0.25+(i < turnorder[2]),8.25,i+0.75+(i < turnorder[2]),9.75, col="chartreuse4", border="white")
+        text(i+0.5+(i < turnorder[2]), 7.5, length(hands[[i]]))
+      }
+    }
+    click <- locator(1)
+    if(floor(click$x) < 2 && floor(click$x)<10)
+      if(floor(click$x)-2 < turnorder[2])
+        return(swapHands(hands, player, floor(click$x)-2))
+    return(swapHands(hands, player, floor(click$x)-1))
+  }
+}
+
 #menu
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by slimestew", ylab = "", axes = FALSE, frame.plot = TRUE)
 par(bg = "navajowhite")
@@ -204,9 +235,6 @@ temp <- sample(length(deck), 1) #don't need to sample here, already randomized
 stack <- deck[temp][1]
 deck <- deck[-temp]
 
-# add card
-# hands[[1]] <- c(hands[[1]], list(list(list(1,"2"))))
-# hands[[1]] <- c(hands[[1]], list(list(list(2,"2"))))
 if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"){
   stack <- c(stack, deck[length(deck)][1])
   deck <- deck[-length(deck)]
@@ -259,6 +287,10 @@ if(menu>0){
           wildcard <- wildColor()
         if(drawCount == -1 && (stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"))
           drawCount <- 0
+        if(stack[[length(stack)]][[2]] == "0" && options[2])
+          hands <- rotateHands(hands)
+        if(stack[[length(stack)]][[2]] == "7" && options[2])
+          hands <- swapUI(hands, turnorder[2])
       }
       turnorder[3] <- TRUE
       selected <- -1
