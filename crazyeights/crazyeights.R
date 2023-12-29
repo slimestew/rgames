@@ -121,6 +121,8 @@ doAI <- function(deck, hands, stack, wildcard, drawCount) {
   turnOver <- FALSE
   while(turnorder[2]!=1){
     for(i in 1:length(hands[[turnorder[2]]])){ #play
+      if(length(hands[[turnorder[2]]])==0)
+        return(list(deck, hands, stack, wildcard, drawCount))
       if(validCard(hands[[turnorder[2]]][[i]])){
         stack <- c(stack, list(hands[[turnorder[2]]][[i]]))
         hands[[turnorder[2]]] <- hands[[turnorder[2]]][-(i)]
@@ -235,6 +237,10 @@ temp <- sample(length(deck), 1) #don't need to sample here, already randomized
 stack <- deck[temp][1]
 deck <- deck[-temp]
 
+# add card
+# hands[1] <- c(hands[[1]], list(list(list(1,"2"))))
+ hands[[1]] <- c(hands[[1]], list(list(2,"0")))
+
 if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"){
   stack <- c(stack, deck[length(deck)][1])
   deck <- deck[-length(deck)]
@@ -302,7 +308,9 @@ if(menu>0){
     
   if(floor(click$x) > 2 && floor(click$x) < 5 && click$y > 3.5 && click$y <= 5){ #draw card
     if(length(deck) == 0){
-      #TODO: get everything but last card, shuffle deck
+      tempcard <- stack[length(stack)]
+      deck <- sample(stack[1:(length(stack)-1)], replace = TRUE)
+      stack <- tempcard
       if(options[1]==0){
         #TODO: if crazy eights, give score to lowest player
       }
@@ -346,10 +354,12 @@ if(menu>0){
     stack <- AI[[3]]
     wildcard <- AI[[4]]
     drawCount <- AI[[5]]
-    if(any(sapply(hands, length) == 0))
+    if(any(sapply(hands, length) == 0)){
       win <- TRUE
+    } else {
+      turnorder[2] <- 1
+    }
     pause <- TRUE
-    turnorder[2] <- 1
   }
 }
   
@@ -359,10 +369,14 @@ rect(0,-2,10,6, col="brown", border="black")
 
 if(!pause){
   
-  for(i in floor(length(deck)/8):1) #TODO: make this fall properly
-    rect(3,4-(i*0.1),5,5-(i*0.1), col="chartreuse4", border="black")
-  rect(3,4,5,5, col="chartreuse3", border="black")
-  rect(3.25,4.25,4.75,4.75, col="chartreuse4", border="white") 
+  if(length(deck) == 0){
+    rect(3,4,5,5, col="brown", border="black")
+  } else {
+    for(i in floor(length(deck)/8):1) #TODO: make this fall properly
+      rect(3,4-(i*0.1),5,5-(i*0.1), col="chartreuse4", border="black")
+    rect(3,4,5,5, col="chartreuse3", border="black")
+    rect(3.25,4.25,4.75,4.75, col="chartreuse4", border="white")
+  }
   
   for(i in 1:(options[4]+2)){
     if(i != turnorder[2]){
