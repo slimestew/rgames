@@ -16,14 +16,14 @@ btnColorsf <- c("blue","cyan", "yellow", "pink2")
 
 checkwin <- function(sub){
   if(any(apply(boards[sub,,], 1, function(r) (all(r==r[1]) && r[1]>0)))) #vertical
-    return(TRUE)
+    return(max(apply(boards[sub,,], 1, function(r) (ifelse((all(r==r[1]) && r[1]>0), r[1], 0))))) #checks for repeats unless -1
   if(any(apply(boards[sub,,], 2, function(r) (all(r==r[1]) && r[1]>0)))) #horizontal
-    return(TRUE)
+    return(max(apply(boards[sub,,], 2, function(r) (ifelse((all(r==r[1]) && r[1]>0), r[1], 0))))) #max selects non zeroes
   if(boards[sub,1,1] == boards[sub,2,2] && boards[sub,1,1] == boards[sub,3,3] && boards[sub,1,1] > 0) #primary diagonal
-    return(TRUE)
+    return(boards[sub,1,1])
   if(boards[sub,1,3] == boards[sub,2,2] && boards[sub,1,3] == boards[sub,3,1] && boards[sub,1,3] > 0) #secondary diagonal
-    return(TRUE)
-  return(FALSE)
+    return(boards[sub,1,3])
+  return(0)
 }
 
 getPiece <- function(sub, x, o){
@@ -115,49 +115,59 @@ plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 3), col="white", xlab = "", y
 menu <- 0
 
 #game loop
-while(!checkwin(1) && (any(boards[1,,] == 0) || any(boards[1,,] == -1))) {
-  if(floor(click$x)<0) #back button
-    sub <- 0
-  if(floor(click$x)<3 && floor(click$x)>-1 && floor(click$y)<3 && floor(click$y)>-1){ #on the board
-    if(boards[1, floor(click$x)+1, floor(click$y)+1] == 0){ #new piece
+while(!checkwin(1)!=0 && (any(boards[1,,] == 0) || any(boards[1,,] == -1))) {
+  
+  if(options[1]){ #advanced
+    
+    if(floor(click$x)<0) #back button
+      sub <- 0
+    
+    if(floor(click$x)<3 && floor(click$x)>-1 && floor(click$y)<3 && floor(click$y)>-1){ #on the board
       
-      if(options[1]){ #advanced
-        if(boards[1, floor(click$x)+1, floor(click$y)+1] == -1 && sub == 0){ #enter subboard
-          sub <- floor(click$x)+1 + (3*(floor(click$y)))
-        } else {
-          boards[sub+1, floor(click$x)+1, floor(click$y)+1] <- getPiece(sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1]) #get piece
+      if(boards[sub+1, floor(click$x)+1, floor(click$y)+1] == 0){ #new piece
+        boards[sub+1, floor(click$x)+1, floor(click$y)+1] <- getPiece(sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1]) #get piece
+        
+        if(boards[sub+1, floor(click$x)+1, floor(click$y)+1] != -1){
+          if(boards[sub+1, floor(click$x)+1, floor(click$y)+1] != 0){
+            sub <- -1
+            turn <- 3 - turn #end turn
+          }
           
-          if(boards[1, floor(click$x)+1, floor(click$y)+1] != -1){
-            if(boards[1, floor(click$x)+1, floor(click$y)+1] != 0)
-              turn <- 3 - turn #end turn
-            
-          } else {
-            sub <- floor(click$x)+1 + (3*(floor(click$y))) #enter subboard and place second symbol
-            
-            while(TRUE){
-              drawBoard(boards, sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1])
-              click <- locator(1)
-              if(floor(click$x)<3 && floor(click$x)>-1 && floor(click$y)<3 && floor(click$y)>-1){
-                  boards[sub+1, floor(click$x)+1, floor(click$y)+1] <- getPiece(sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1]) #get piece
-                if(boards[sub+1, floor(click$x)+1, floor(click$y)+1] != 0){
-                  sub <- 0
-                  turn <- 3 - turn
-                  break
-                }
+        } else {
+          sub <- floor(click$x)+1 + (3*(floor(click$y))) #enter microboard
+          
+          while(TRUE){ #place second symbol
+            drawBoard(boards, sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1])
+            click <- locator(1)
+            if(floor(click$x)<3 && floor(click$x)>-1 && floor(click$y)<3 && floor(click$y)>-1){
+              boards[sub+1, floor(click$x)+1, floor(click$y)+1] <- getPiece(sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1]) #get piece
+              if(boards[sub+1, floor(click$x)+1, floor(click$y)+1] != 0){
+                sub <- -1
+                turn <- 3 - turn
+                break
               }
             }
-            
           }
+        
         }
         
-        for(i in 2:10){ #check boards for a win
-          if(checkwin(i)){
-            #TODO: make checkwin return the winning piece of a microboard
-            #TODO: boards[1, (i-2)%3, (i-2)/3] <- checkwin(i)
-          }
-        }
-        
-      } else { #basic
+      } #new piece
+      
+      if(boards[1, floor(click$x)+1, floor(click$y)+1] == -1 && sub == 0 && !checkwin(1)) #enter microboard
+        sub <- floor(click$x)+1 + (3*(floor(click$y)))
+      
+      if(sub==-1) #fixes a bug where placing a piece inside of a 
+        sub <- 0
+      
+    } #on the board
+    
+    for(i in 2:10) #check microboards for a win
+      if(checkwin(i)!=0)
+        boards[1, (i-2)%%3+1, floor((i-2)/3)+1] <- checkwin(i) #replace with a piece
+    
+  } else { #basic
+    if(floor(click$x)<3 && floor(click$x)>-1 && floor(click$y)<3 && floor(click$y)>-1){ #on the board
+      if(boards[1, floor(click$x)+1, floor(click$y)+1] == 0){ #new piece   
         boards[1, floor(click$x)+1, floor(click$y)+1] <- turn
         turn <- 3 - turn
       }
@@ -168,16 +178,16 @@ while(!checkwin(1) && (any(boards[1,,] == 0) || any(boards[1,,] == -1))) {
   
   menu <- 1
   
-  click <- locator(1)
-}
-
-drawBoard(boards, sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1])
+  if(!checkwin(1)!=0 && (any(boards[1,,] == 0) || any(boards[1,,] == -1)))
+    click <- locator(1)
+} #game loop
 
 turn <- 3 - turn
+drawBoard(boards, sub, btnColorsb[options[2]+1], btnColorsf[options[2]+1])
 
 rect(1,1,2,2, col="#d9d9d980", border="transparent")
 if(!options[3] || turn==options[3]){
-  if(checkwin(1))
+  if(checkwin(1)!=0)
     text(1.5,1.5, "You win!")
   else
     text(1.5,1.5, "Draw")

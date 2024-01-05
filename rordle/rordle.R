@@ -29,13 +29,18 @@ drawGuess <- function(word, guess, guesses){ #assumes all lowercase
   return(c(res,guesses))
 }
 
-drawLetters <- function(letterGuesses){
-  keyb <- c(17, 23, 5, 18, 20, 25, 21, 9, 16, 10,
-            1, 19, 4, 6, 7, 8, 12, 11, 13,
-            26, 24, 3, 22, 2, 14, 15)
+drawLetters <- function(letterGuesses, dvorak=FALSE){
+  keyb <- c(17, 23, 5, 18, 20, 25, 21, 9, 15, 16,
+            1, 19, 4, 6, 7, 8, 10, 11, 12,
+            26, 24, 3, 22, 2, 14, 13)
+  dvor <- c(16, 25, 6, 7, 3, 18, 12,
+            1, 15, 5, 21, 9, 4, 8, 20, 14, 19,
+            17, 10, 11, 24, 2, 13, 23, 22, 26)
+  if(dvorak)
+    keyb <- dvor
   for(i in 1:26){
     cat(paste0(intToUtf8(keyb[i] + 64), "[",letterGuesses[keyb[i]],"]"))
-    if(i==10 || i==19 || i==26)
+    if(((i==10 || i==19 || i==26) && !dvorak) || ((i==7 || i==17 || i==26) && dvorak))
       cat("\n")
   }
 }

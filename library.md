@@ -14,7 +14,7 @@
 | Four-in-a-Row    | fiar        | Complete  |
 | text Editor      | text/text   | Abandoned |
 | ed Editor (CLI)  | text/ed     | WIP       |
-| Tic Tac Toe      | tictactoe   | Playable  |
+| Tic Tac Toe      | tictactoe   | Complete  |
 | Chess            | chess       | Empty     |
 | Checkers         | checkers    | Empty     |
 | Mancala          | mancala     | Empty     |
