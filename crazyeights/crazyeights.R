@@ -43,9 +43,9 @@ unpack <- function() {
   if(options[1]<2) {
     for(j in 1:13)
       cards <- c(cards, list(list(i,stVals[j])))
-    if(options[4]>3)
-      for(j in 1:13)
-        cards <- c(cards, list(list(i,stVals[j])))
+  if(options[4]>3)
+    for(j in 1:13)
+      cards <- c(cards, list(list(i,stVals[j])))
   } else {
     for(j in 1:15)
       cards <- c(cards, list(list(i,uqVals[j])))
@@ -111,26 +111,66 @@ validCard <- function(card) {
           (valu == "F" && drawCount<0)  || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
 }
 
-nextPlayer <- function() {
+nextPlayer <- function(turnorder, options) {
   if(turnorder[1])
     return((turnorder[2] %% (options[4]+2)) + 1)
   return(((turnorder[2]-2) %% (options[4]+2)) + 1)
 }
 
-doAI <- function(deck, hands, stack, wildcard, drawCount) {
+doAI <- function(deck, hands, stack, wildcard, drawCount, options) {
   turnOver <- FALSE
   while(turnorder[2]!=1){
     for(i in 1:length(hands[[turnorder[2]]])){ #play
-      if(length(hands[[turnorder[2]]])==0)
+      if(length(hands[[turnorder[2]]])==0) #escape when winner found
         return(list(deck, hands, stack, wildcard, drawCount))
-      if(validCard(hands[[turnorder[2]]][[i]])){
-        stack <- c(stack, list(hands[[turnorder[2]]][[i]]))
+      if(validCard(hands[[turnorder[2]]][[i]]) && drawCount == -1){
+        stack <- c(stack, list(hands[[turnorder[2]]][[i]])) #play valid card
         hands[[turnorder[2]]] <- hands[[turnorder[2]]][-(i)]
         wildcard <- 0
         turnOver <- TRUE
+        
+        #power cards
+        if(options[1] == 0){  #crazy eights
+          if(stack[[length(stack)]][[2]] == "8")
+            wildcard <- as.integer(names(which.max(table(unlist(sapply(hands[[turnorder[2]]], function(hand) hand[1])))))) #gets the most common suit
+          if(stack[[length(stack)]][[2]] == "Q" && options[2])
+            turnorder[2] <- nextPlayer(turnorder, options)
+        } else if(options[1] == 1) { #last card
+          if(drawCount == -1 && (stack[[length(stack)]][[2]] == "2" || stack[[length(stack)]][[2]] == "A"))
+            drawCount <- 0
+          if(stack[[length(stack)]][[2]] == "2")
+            drawCount <- drawCount+2
+          if(stack[[length(stack)]][[2]] == "A")
+            drawCount <- drawCount+4
+          if(stack[[length(stack)]][[2]] == "8")
+            turnorder[2] <- nextPlayer(turnorder, options)
+          if(stack[[length(stack)]][[2]] == "J" || stack[[length(stack)]][[2]] == "A")
+            wildcard <- as.integer(names(which.max(table(unlist(sapply(hands[[turnorder[2]]], function(hand) hand[1])))))) #sample(1:4, 1)
+        } else if(options[1] >= 2){ #one and other one
+          if(stack[[length(stack)]][[2]] == "S")
+            turnorder[2] <- nextPlayer(turnorder, options)
+          if(stack[[length(stack)]][[2]] == "R")
+            turnorder[1] <- !turnorder[1]
+          if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "F")
+            wildcard <- as.integer(names(which.max(table(unlist(sapply(hands[[turnorder[2]]], function(hand) hand[1]))))))
+          if(drawCount == -1 && (stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"))
+            drawCount <- 0
+          if(stack[[length(stack)]][[2]] == "T")
+            drawCount <- drawCount+2
+          if(stack[[length(stack)]][[2]] == "F")
+            drawCount <- drawCount+4
+          if(stack[[length(stack)]][[2]] == "0" && options[2])
+            hands <- rotateHands(hands, options)
+          if(stack[[length(stack)]][[2]] == "7" && options[2]){
+            tempLength <- sapply(hands, length)
+            tempLength[turnorder[2]] <- 9999
+            hands <- swaphands(hands, turnorder[2], which.min(tempLength))
+          }
+        }
+
         break
       }
-      #TODO: power cards
+
     }
       if(!turnOver){ #draw
         hand <- max(1, drawCount)
@@ -140,12 +180,12 @@ doAI <- function(deck, hands, stack, wildcard, drawCount) {
         }
         drawCount <- -1
       }
-    turnorder[2] <- nextPlayer() 
+    turnorder[2] <- nextPlayer(turnorder, options)
   }
   return(list(deck, hands, stack, wildcard, drawCount))
-}
+} #ai over
 
-rotateHands <- function(hands){
+rotateHands <- function(hands, options){
   if(turnorder[2])
     return( c(hands[options[4]+2], hands[1:(options[4]+1)]) )
   return( c(hands[2:(options[4]+2)], hands[1]) )
@@ -231,6 +271,8 @@ for(i in 1:(options[4]+2)){
     temp <- sample(length(deck), 1) #don't need to sample here, already randomized
     hands[[i]] <- c(hands[[i]], deck[temp][1])
     deck <- deck[-temp]
+    if(j == 2)
+      next
   }
 }
 temp <- sample(length(deck), 1) #don't need to sample here, already randomized
@@ -238,8 +280,7 @@ stack <- deck[temp][1]
 deck <- deck[-temp]
 
 # add card
-# hands[1] <- c(hands[[1]], list(list(list(1,"2"))))
- hands[[1]] <- c(hands[[1]], list(list(2,"0")))
+# hands[[1]] <- c(hands[[1]], list(list(2,"0")))
 
 if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"){
   stack <- c(stack, deck[length(deck)][1])
@@ -276,17 +317,17 @@ if(menu>0){
         if(stack[[length(stack)]][[2]] == "8")
           wildcard <- wildColor()
         if(stack[[length(stack)]][[2]] == "Q" && options[2])
-          turnorder[2] <- nextPlayer()
+          turnorder[2] <- nextPlayer(turnorder, options)
       } else if(options[1] == 1) { #last card
         if(stack[[length(stack)]][[2]] == "8")
-          turnorder[2] <- nextPlayer()
+          turnorder[2] <- nextPlayer(turnorder, options)
         if(stack[[length(stack)]][[2]] == "J" || stack[[length(stack)]][[2]] == "A")
           wildcard <- wildColor()
         if(drawCount == -1 && (stack[[length(stack)]][[2]] == "2" || stack[[length(stack)]][[2]] == "A"))
           drawCount <- 0
       } else if(options[1] >= 2){ #one and other one
         if(stack[[length(stack)]][[2]] == "S")
-          turnorder[2] <- nextPlayer()
+          turnorder[2] <- nextPlayer(turnorder, options)
         if(stack[[length(stack)]][[2]] == "R")
           turnorder[1] <- !turnorder[1]
         if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "F")
@@ -294,7 +335,7 @@ if(menu>0){
         if(drawCount == -1 && (stack[[length(stack)]][[2]] == "T" || stack[[length(stack)]][[2]] == "F"))
           drawCount <- 0
         if(stack[[length(stack)]][[2]] == "0" && options[2])
-          hands <- rotateHands(hands)
+          hands <- rotateHands(hands, options)
         if(stack[[length(stack)]][[2]] == "7" && options[2])
           hands <- swapUI(hands, turnorder[2])
       }
@@ -307,7 +348,7 @@ if(menu>0){
   }
     
   if(floor(click$x) > 2 && floor(click$x) < 5 && click$y > 3.5 && click$y <= 5){ #draw card
-    if(length(deck) == 0){
+    if(length(deck) == 0 && length(stack)>1){
       tempcard <- stack[length(stack)]
       deck <- sample(stack[1:(length(stack)-1)], replace = TRUE)
       stack <- tempcard
@@ -315,14 +356,20 @@ if(menu>0){
         #TODO: if crazy eights, give score to lowest player
       }
     }
-    hand <- max(1, drawCount)
-    for(i in 1:hand){
-      hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], deck[length(deck)][1])
-      deck <- deck[-length(deck)]
+    if(length(deck)>0){
+      hand <- max(1, drawCount)
+      for(i in 1:hand){
+        hands[[turnorder[2]]] <- c(hands[[turnorder[2]]], deck[length(deck)][1])
+        deck <- deck[-length(deck)]
+      }
+      if(!turnorder[3]){
+        turnorder[2] <- nextPlayer(turnorder, options)
+        pause <-TRUE
+      }
+      selected <- -1
+      handOffset <- 0
+      drawCount <- -1
     }
-    selected <- -1
-    handOffset <- 0
-    drawCount <- -1
   }
   
   if(length(hands[[turnorder[2]]]) == 0)
@@ -343,19 +390,19 @@ if(menu>0){
     
     if(!options[3])
       pause <-TRUE
-    turnorder[2] <- nextPlayer()
+    turnorder[2] <- nextPlayer(turnorder, options)
     selected <- 0
   }
   
   if(options[3] && turnorder[2]!=1){
-    AI <- doAI(deck, hands, stack, wildcard, drawCount)
+    AI <- doAI(deck, hands, stack, wildcard, drawCount, options)
     deck <- AI[[1]]
     hands <- AI[[2]]
     stack <- AI[[3]]
     wildcard <- AI[[4]]
     drawCount <- AI[[5]]
     if(any(sapply(hands, length) == 0)){
-      win <- TRUE
+      win <- FALSE
     } else {
       turnorder[2] <- 1
     }
@@ -430,7 +477,8 @@ if(!pause){
   }
 
 } else {
-  text(4,4, paste("Click for Player",turnorder[2]))
+  if(win)
+    text(4,4, paste("Click for Player",turnorder[2]))
   menu <- -1
 }
 
@@ -446,4 +494,5 @@ if(!options[3] || (length(hands[[1]]) == 0 && options[3])){
   text(5,3, "You win!")
 } else {
   text(5,3, "Game Over")
+  text(5,2, paste0("Player ", which.min(sapply(my_list, length)), " wins"))
 }

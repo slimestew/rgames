@@ -10,7 +10,7 @@
 | Game             | Short Title | Status    |
 |:-----------------|-------------|:----------|
 | Gems Game        | gemsgame    | Complete  |
-| Crazy Eights     | crazyeights | Playable  |
+| Crazy Eights     | crazyeights | Complete  |
 | Four-in-a-Row    | fiar        | Complete  |
 | text Editor      | text/text   | Abandoned |
 | ed Editor (CLI)  | text/ed     | WIP       |
@@ -23,7 +23,7 @@
 | Gomoku           | gomoku      | Empty     |
 | Shogi            | shogi       | Empty     |
 | Pachisi          | ludo        | Empty     |
-| Towers of Hanoi  | hanoi       | Empty     |
+| Towers of Hanoi  | hanoi       | WIP       |
 | Go Fish          | gofish      | Empty     |
 | Hangman          | hangman     | Empty     |
 | R-dle (CLI)      | rordle      | Complete  |

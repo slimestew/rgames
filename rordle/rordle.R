@@ -2,6 +2,7 @@
 library(words)
 guesses <- 1
 guess <- ""
+history <- list()
 
 fiveLength <- subset(words, word_length == 5)
 word <- sample(fiveLength$word, 1)
@@ -59,9 +60,9 @@ while(guesses<7 && tolower(guess) != word){
   guess <- readline()
   
   if(nchar(guess)==5 && tolower(guess) %in% fiveLength$word && ((hardmode && hardmodetest(word, guess, letterGuesses)) || !hardmode) ) {
+    history[length(history)+1] <- guess
     drawn <- drawGuess(word, tolower(guess), guesses)
     cat(drawn)
-    cat("\n")
     guesses <- guesses + 1
     for(i in 1:5){
       if(letterGuesses[[utf8ToInt(substr(tolower(guess),i,i)) - 96]] != "!" || drawn[i] == "!") #only stores if either better than nothing or correct
@@ -69,6 +70,19 @@ while(guesses<7 && tolower(guess) != word){
     }
   } else if(tolower(guess) == "letters") {
     drawLetters(letterGuesses)
+  } else if(tolower(guess) == "dvorak") {
+    drawLetters(letterGuesses, TRUE)
+  } else if(tolower(guess) == "giveup") {
+    guesses <- 7
+  } else if(tolower(guess) == "history") {
+    if(length(history)==0) {
+      cat("No guesses have been made\n")
+    } else {
+      for(i in 1:length(history)){
+        drawn <- cat(drawGuess(word, tolower(history[i]), i))
+        cat(paste0(drawn, " ", history[i], "\n"))
+      }
+    }
   } else if(tolower(guess) == "hardmode") {
     hardmode <- !hardmode
     cat(paste("Hard Mode is now",ifelse(hardmode,"on","off")))
@@ -76,6 +90,12 @@ while(guesses<7 && tolower(guess) != word){
     cat("That word is invalid\n")
   }
 }
+
+if(length(history)!=0)
+  for(i in 1:length(history)){
+    drawn <- cat(drawGuess(word, tolower(history[i]), i))
+    cat(paste0(drawn, " ", history[i], "\n"))
+  }
 
 if(tolower(guess) == word){
   cat("You Win!")
