@@ -23,7 +23,7 @@
 | Gomoku           | gomoku      | Empty     |
 | Shogi            | shogi       | Empty     |
 | Pachisi          | ludo        | Empty     |
-| Towers of Hanoi  | hanoi       | WIP       |
+| Towers of Hanoi  | hanoi       | Complete  |
 | Go Fish          | gofish      | Empty     |
 | Hangman          | hangman     | Empty     |
 | R-dle (CLI)      | rordle      | Complete  |
@@ -35,4 +35,5 @@
 | Minesweeper      | minesweeper | Empty     |
 | Point n Click    | pointnclick | Empty     |
 | R-playing Game   | rpg         | Empty     |
+| Visual Novel     | vn          | Empty     |
 | Rsynth           | synth       | Empty     |

@@ -1,5 +1,5 @@
 par(bg = "thistle3")
-board <- list(list(), list(), list())
+board <- list(c(), c(), c())
 menu <- 0
 selected <- 0
 click <- list(x = 3, y = 3)
@@ -15,13 +15,17 @@ checkwin <- function(board, options){
 }
 
 moveBlock <- function(board, temp, selected){
+  if(any(!is.na(board[[temp]])) && any(!is.na(board[[selected]])) &&
+     (board[[temp]][1] > board[[selected]][1])) #invalid move
+    return(board)
   board[[temp]] <- c(board[[selected]][1], board[[temp]])
   board[[selected]] <- board[[selected]][-1]
   return(board)
 }
 
-drawBoard <- function(board, colorst, textboxes, max){
+drawBoard <- function(board, colorst, textboxes, maximum){
   #max <- sum(sapply(board, length))
+  denom <- ceiling(maximum*2.5)
   plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 10), xlab = paste("Guesses:",textboxes[1]), ylab = paste("Minimum:",textboxes[2]), axes = FALSE, frame.plot = FALSE)
   rect(0,0,3,-1, col=colorst[1], fg="black")
   
@@ -30,9 +34,8 @@ drawBoard <- function(board, colorst, textboxes, max){
   
   for(i in 1:3) #disks
     if(length(board[[i]])>0)
-      for(j in 1:length(board[[i]])){
-        rect((board[[i]][j]/ceiling(max*2.5))+i-1, j-1, (1-board[[i]][j]/ceiling(max*2.5))+i-1, j, col=ifelse((board[[i]][j] %% 2 == 0), colorst[1], colorst[2]))
-      }
+      for(j in 1:length(board[[i]]))
+        rect((board[[i]][j]/denom)+i-1, length(board[[i]])-j, (1-board[[i]][j]/denom)+i-1, length(board[[i]])-j+1, col=ifelse((board[[i]][j] %% 2 == 0), colorst[1], colorst[2]))
 }
 
 
@@ -57,6 +60,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   rect(1, 5, 7, 6, col = "white", border = "black")
   rect(1, 3, 7, 4, col = ifelse(options[1]>1, "green", "red"), border = "black")
   rect(1, 2, 7, 3, col = colorsb[options[2]+1], border = "black")
+  rect(1, 1, 7, 2, col = "sienna1")
   text(4,8, "Tower of Hanoi")
   text(4,3.5, optext[options[1]+1])
   text(4,2.5, "Colors", col=colorsf[options[2]+1])
@@ -66,7 +70,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   menu <- min(menu + 1,2)
 }
 
-board[1] <- list(c(1:(options[3]+3)))
+board[1] <- list(c((options[3]+3):1))
 textboxes[2] <- 2^(options[3]+3)-1
 menu <- 0
 
@@ -97,12 +101,12 @@ while(!checkwin(board, options)) {
       if(floor(click$x) > 3)
         temp <- 3
       
-      if(temp == selected){
-        selected <- 0
-        temp <- 0
-      } else {
+      if(temp != selected){
         board <- moveBlock(board, temp, selected)
+        textboxes[1] <- textboxes[1]+1
       }
+      selected <- 0
+      temp <- 0
     }
     
   }
@@ -114,3 +118,10 @@ while(!checkwin(board, options)) {
   if(!checkwin(boards, options))
     click <- locator(1)
 } #game loop
+
+rect(1,3.5,2,5.5, col="thistle4")
+if(textboxes[1] == textboxes[2]){
+  text(1.5,4.5, "You win!")
+} else {
+  text(1.5,4.5, "Nice try!")
+}
