@@ -1,5 +1,3 @@
-#TODO: make the game work, make the pile draw correctly
-
 par(bg = "navajowhite")
 cards <- list() #all cards, shuffles
 deck <- list() #draw pile
@@ -13,7 +11,7 @@ menu <- 0
 win <- TRUE
 turnorder <- c(1, 1, FALSE) #player, direction, move played
 click <- list(x = 3, y = 3)
-textboxes <- list(0,0)
+scores <- list()
 options <- c(0, 0, 0, 0)
 # Variants:
 #     Crazy Eights(standard deck, minimal power cards, score based)
@@ -28,7 +26,7 @@ options <- c(0, 0, 0, 0)
 # Computer or Human opponents
 # Number of players
 hands <- matrix()
-stVals <- c("1","2","3","4","5","6","7","8","9","J","Q","K","A")
+stVals <- c("A","2","3","4","5","6","7","8","9","X","J","Q","K")
 uqVals <- c("0","1","2","3","4","5","6","7","8","9","T","S","R","C","F")
 suits <- c("♥", "♦", "♠", "♣")
 variants <- c("Crazy Eights", "Last Card", "One", "Other One")
@@ -40,16 +38,16 @@ oneColors <- c("#ff0077","#ffaa00", "#448800", "#0066ff")
 
 unpack <- function() {
   for(i in 1:4)
-  if(options[1]<2) {
+  if(options[1]<2) { #less than 4 players
     for(j in 1:13)
       cards <- c(cards, list(list(i,stVals[j])))
   if(options[4]>3)
     for(j in 1:13)
       cards <- c(cards, list(list(i,stVals[j])))
   } else {
-    for(j in 1:15)
+    for(j in 1:15) #two of every card
       cards <- c(cards, list(list(i,uqVals[j])))
-    for(j in 2:13)
+    for(j in 2:13) #two of every card besides 0, C, and F
       cards <- c(cards, list(list(i,uqVals[j])))
   }
   return(cards)
@@ -80,6 +78,8 @@ dispCard <- function(x, y, card) {
   } else if(valu == "F"){
     rect(x,y+1,x+1,y+2, col="gray12", border="black")
     text(0.5+x,0.5+y, "+4")
+  } else if(valu == "X"){
+    text(0.5+x,0.5+y, "10")
   } else {
     text(0.5+x,0.5+y, valu)
   }
@@ -262,22 +262,25 @@ menu <- 0
 cards <- sample(unpack(), replace=TRUE)
 deck <- cards
 hands <- replicate(options[4]+2, list())
+scores <- rep(0, options[4]+2)
 for(i in 1:(options[4]+2)){
   hand<-7
   if(options[1]<2 && options[4] != 0)
     hand<-5
   
   for(j in 1:hand){
-    temp <- sample(length(deck), 1) #don't need to sample here, already randomized
+    temp <- sample(length(deck), 1)
     hands[[i]] <- c(hands[[i]], deck[temp][1])
     deck <- deck[-temp]
     if(j == 2)
       next
   }
 }
-temp <- sample(length(deck), 1) #don't need to sample here, already randomized
+temp <- sample(length(deck), 1)
 stack <- deck[temp][1]
 deck <- deck[-temp]
+
+maxScore <- (options[4]+2) * 50
 
 # add card
 # hands[[1]] <- c(hands[[1]], list(list(2,"0")))
@@ -288,7 +291,7 @@ if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || s
 }
 
 #game loop
-while(win) {
+while(win && (options[1]==0) == all(scores < maxScore)) {
 
 if(menu>0){
   
@@ -351,10 +354,34 @@ if(menu>0){
     if(length(deck) == 0 && length(stack)>1){
       tempcard <- stack[length(stack)]
       deck <- sample(stack[1:(length(stack)-1)], replace = TRUE)
-      stack <- tempcard
       if(options[1]==0){
-        #TODO: if crazy eights, give score to lowest player
+        sums <- c()
+        for(i in 1:(options[4]+2)){ #total scores
+          sums[i] <- 0
+          for(j in 1:length(hands[[i]])){
+            if(hands[[i]][[j]][2] == "8")
+              sums[i] <- sums[[i]] + 50
+            else if(hands[[i]][[j]][2] == "J")
+              sums[i] <- sums[[i]] + 10
+            else if(hands[[i]][[j]][2] == "Q")
+              sums[i] <- sums[[i]] + 10
+            else if(hands[[i]][[j]][2] == "K")
+              sums[i] <- sums[[i]] + 10
+            else if(hands[[i]][[j]][2] == "X")
+              sums[i] <- sums[[i]] + 10
+            else if(hands[[i]][[j]][2] == "A")
+              sums[i] <- sums[[i]] + 1
+            else
+              sums[i] <- sums[[i]] + as.integer(hands[[i]][[j]][[2]])
+          }
+        }
+        for(i in 1:(options[4]+2)){
+          if(sums[i] == min(sums))
+            scores[i] <- scores[i] + floor((max(sums) - min(sums)) / sum(sums == min(sums))) #difference of points divided by number of lowest values (on tie)
+        }
+        
       }
+      stack <- tempcard
     }
     if(length(deck)>0){
       hand <- max(1, drawCount)
@@ -410,19 +437,22 @@ if(menu>0){
   }
 }
   
-plot(0, 0, type = "n", xlim = c(0, 10), ylim = c(0, 10), xlab = ifelse(options[1]==0,paste("Score:",textboxes),""), ylab = "", axes = FALSE, frame.plot = FALSE)
+plot(0, 0, type = "n", xlim = c(0, 10), ylim = c(0, 10), xlab = ifelse(options[1]==0,paste("Score:",scores[turnorder[2]]),""), ylab = "", axes = FALSE, frame.plot = FALSE)
 rect(0,4.5,10,6.5, col="darkorange4", border="black")
 rect(0,-2,10,6, col="brown", border="black")
 
 if(!pause){
   
   if(length(deck) == 0){
-    rect(3,4,5,5, col="brown", border="black")
+    rect(3,4,5,5, col="brown", border="black", lty = "dashed")
   } else {
-    for(i in floor(length(deck)/8):1) #TODO: make this fall properly
-      rect(3,4-(i*0.1),5,5-(i*0.1), col="chartreuse4", border="black")
-    rect(3,4,5,5, col="chartreuse3", border="black")
-    rect(3.25,4.25,4.75,4.75, col="chartreuse4", border="white")
+    i <- 0
+    if(floor(length(deck)/8) > 0)
+      for(i in 1:floor(length(deck)/8)) #TODO: make this fall properly
+        rect(3,3.5+(i*0.1),5,4.5+(i*0.1), col="chartreuse4", border="black")
+    i <- i+1
+    rect(3,3.5+(i*0.1),5,4.5+(i*0.1), col="chartreuse3", border="black")
+    rect(3.25,3.75+(i*0.1),4.75,4.25+(i*0.1), col="chartreuse4", border="white")
   }
   
   for(i in 1:(options[4]+2)){
@@ -463,17 +493,65 @@ if(!pause){
       }
     }
   }
+  
+  text(1,-1, paste("Player",turnorder[2]), xpd=TRUE, col="darkorange4")
+  
   dispCard(5, 4, stack[[length(stack)]])
     
   if(win){
     for(i in (1+handOffset):min(length(hands[[turnorder[2]]]), handOffset+8))
       dispCard(i-handOffset, ((selected+handOffset)==i), hands[[turnorder[2]]][[i]])
+  } else if(options[1]==0 && any(scores <= maxScore)){
+    text(4,2, paste("Tallying points"))
     
-    if(options[1]==0 && any(textboxes >= ((2+options[4])*50))){
-      text(4,4, paste("Tallying points",turnorder[2]))
-      win <- FALSE
-      click <- locator(1)
+    for(i in 1:(options[4]+2)){
+      sum <- 0
+      if(i==turnorder[2])
+        next
+      for(j in 1:length(hands[[i]])){
+          if(hands[[i]][[j]][2] == "8")
+            hands[[i]][[j]][2] <- 50
+          else if(hands[[i]][[j]][2] == "J")
+            hands[[i]][[j]][2] <- 10
+          else if(hands[[i]][[j]][2] == "Q")
+            hands[[i]][[j]][2] <- 10
+          else if(hands[[i]][[j]][2] == "K")
+            hands[[i]][[j]][2] <- 10
+          else if(hands[[i]][[j]][2] == "X")
+            hands[[i]][[j]][2] <- 10
+          else if(hands[[i]][[j]][2] == "A")
+            hands[[i]][[j]][2] <- 1
+          else
+            hands[[i]][[j]][2] <- as.integer(hands[[i]][[j]][[2]])
+          sum <- sum + hands[[i]][[j]][[2]]
+      }
+      scores[turnorder[2]] <- scores[turnorder[2]] + sum
     }
+      
+    if(all(scores < maxScore) && options[1] == 0)
+      win <- TRUE
+    
+    deck <- cards
+    hands <- replicate(options[4]+2, list())
+    for(i in 1:(options[4]+2)){
+      hand<-7
+      if(options[1]<2 && options[4] != 0)
+        hand<-5
+      
+      for(j in 1:hand){
+        temp <- sample(length(deck), 1)
+        hands[[i]] <- c(hands[[i]], deck[temp][1])
+        deck <- deck[-temp]
+        if(j == 2)
+          next
+      }
+    }
+    temp <- sample(length(deck), 1)
+    stack <- deck[temp][1]
+    deck <- deck[-temp]
+    turnorder[2] <- 1
+    selected <- 0
+    handOffset <- 0
   }
 
 } else {
