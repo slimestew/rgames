@@ -16,7 +16,7 @@
 | ed Editor (CLI)  | text/ed     | WIP       |
 | Tic Tac Toe      | tictactoe   | Playable  |
 | Chess            | chess       | Empty     |
-| Checkers         | checkers    | Empty     |
+| Checkers         | checkers    | WIP       |
 | Mancala          | mancala     | Empty     |
 | Sudoku           | sudoku      | Empty     |
 | Dots and Boxes   | dotsnboxes  | Empty     |
@@ -37,3 +37,5 @@
 | R-playing Game   | rpg         | Empty     |
 | Visual Novel     | vn          | Empty     |
 | Rsynth           | synth       | Empty     |
+| Adventure        | adventure   | Empty     |
+| Clock            | clock       | Complete  |

@@ -42,6 +42,9 @@ drawBoard <- function(board, colorst, textboxes, maximum){
 #menu
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), xlab = "by slimestew", ylab = "", axes = FALSE, frame.plot = TRUE)
 text(4.5,5, "The Tower of Hanoi")
+rect(1,1,8,2, col="tan")
+rect(2,2.5,7,3.5, col="sienna")
+rect(3,6,6,7, col="tan")
 
 while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   click <- locator(1)
