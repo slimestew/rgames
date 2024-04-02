@@ -291,7 +291,7 @@ if(stack[[length(stack)]][[2]] == "C" || stack[[length(stack)]][[2]] == "T" || s
 }
 
 #game loop
-while(win && (options[1]==0) == all(scores < maxScore)) {
+while( win && (((options[1]==0) == all(scores < maxScore)) || options[1]>0)) {
 
 if(menu>0){
   
@@ -502,6 +502,7 @@ if(!pause){
     for(i in (1+handOffset):min(length(hands[[turnorder[2]]]), handOffset+8))
       dispCard(i-handOffset, ((selected+handOffset)==i), hands[[turnorder[2]]][[i]])
   } else if(options[1]==0 && any(scores <= maxScore)){
+    plot(0, 0, type = "n", xlim = c(0, 10), ylim = c(0, 10), xlab = "", ylab = "", axes = FALSE, frame.plot = FALSE)
     text(4,2, paste("Tallying points"))
     
     for(i in 1:(options[4]+2)){
