@@ -107,8 +107,8 @@ wildColor <- function() {
 validCard <- function(card) {
   suit <- card[[1]]
   valu <- card[[2]]
-  return((suit == stack[[length(stack)]][[1]] && !wildcard) || valu == stack[[length(stack)]][[2]] || (valu == "C" && drawCount<0) ||
-          (valu == "F" && drawCount<0)  || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard))
+  return((suit == stack[[length(stack)]][[1]] && !wildcard && drawCount<0) || (valu == stack[[length(stack)]][[2]]) || (valu == "C" && drawCount<0) ||
+          (valu == "F" && drawCount<0) || (options[1]==0 && valu== "8") || (options[1]==1 && valu== "A") || (options[1]==1 && valu== "J") || (wildcard && suit == wildcard && drawCount < 0))
 }
 
 nextPlayer <- function(turnorder, options) {
@@ -201,13 +201,7 @@ swapHands <- function(hands, a, b){
 swapUI <- function(hands, player){
   rect(0,0,10,3, col="#a52a2a80", border="transparent")
   while(TRUE){
-    for(i in 1:(options[4]+2)){
-      if(i != turnorder[2]){
-        rect((i < turnorder[2])+i,8,i+1+(i < turnorder[2]),10, col="chartreuse3", border="black")
-        rect(i+0.25+(i < turnorder[2]),8.25,i+0.75+(i < turnorder[2]),9.75, col="chartreuse4", border="white")
-        text(i+0.5+(i < turnorder[2]), 7.5, length(hands[[i]]))
-      }
-    }
+    #unnecesary! these cards will already be drawn
     click <- locator(1)
     if(floor(click$x) < 2 && floor(click$x)<10)
       if(floor(click$x)-2 < turnorder[2])
