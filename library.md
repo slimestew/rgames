@@ -17,7 +17,7 @@
 | Tic Tac Toe      | tictactoe   | Playable  |
 | Chess            | chess       | Empty     |
 | Checkers         | checkers    | WIP       |
-| Mancala          | mancala     | Empty     |
+| Mancala          | mancala     | Playable  |
 | Sudoku           | sudoku      | Empty     |
 | Dots and Boxes   | dotsnboxes  | Empty     |
 | Gomoku           | gomoku      | Empty     |
