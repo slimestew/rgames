@@ -15,22 +15,23 @@ checkwin <- function(board, options){
 }
 
 moveBlock <- function(board, temp, selected){
-  if(any(!is.na(board[[temp]])) && any(!is.na(board[[selected]])) &&
-     (board[[temp]][1] > board[[selected]][1])) #invalid move
+  if(length(board[[selected]]) == 0)
+    return(board) #empty spot
+  if(length(board[[temp]]) > 0 && (board[[temp]][1] > board[[selected]][1])) #invalid move
     return(board)
   board[[temp]] <- c(board[[selected]][1], board[[temp]])
   board[[selected]] <- board[[selected]][-1]
   return(board)
 }
 
-drawBoard <- function(board, colorst, textboxes, maximum){
+drawBoard <- function(board, colorst, textboxes, maximum, selected){
   #max <- sum(sapply(board, length))
   denom <- ceiling(maximum*2.5)
   plot(0, 0, type = "n", xlim = c(0, 3), ylim = c(0, 10), xlab = paste("Guesses:",textboxes[1]), ylab = paste("Minimum:",textboxes[2]), axes = FALSE, frame.plot = FALSE)
   rect(0,0,3,-1, col=colorst[1], fg="black")
   
-  for(i in 0:2) #rods
-    rect((0.4+i),0,(0.6+i),10, col=colorst[1], fg="black")
+  for(i in 0:2)  #rods
+    rect((0.4+i),0,(0.6+i),10,col=colorst[1], border=if(i == selected) "#808080" else "black")
   
   for(i in 1:3) #disks
     if(length(board[[i]])>0)
@@ -105,20 +106,21 @@ while(!checkwin(board, options)) {
         temp <- 3
       
       if(temp != selected){
+        tboard <- board
         board <- moveBlock(board, temp, selected)
-        textboxes[1] <- textboxes[1]+1
+        if(!identical(tboard, board))
+          textboxes[1] <- textboxes[1]+1
       }
       selected <- 0
       temp <- 0
     }
-    
   }
   
-  drawBoard(board, colorst, textboxes, options[3]+3)
+  drawBoard(board, colorst, textboxes, options[3]+3, selected-1)
   
   menu <- 1
   
-  if(!checkwin(boards, options))
+  if(!checkwin(board, options))
     click <- locator(1)
 } #game loop
 

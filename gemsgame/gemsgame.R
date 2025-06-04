@@ -1,4 +1,4 @@
-par(bg = "darkblue")
+par(bg = "darkblue") #303080
 gems <- matrix(0, nrow = 8, ncol = 8)
 tempgems <- matrix(0, nrow = 8, ncol = 8)
 tempcheck <- list()

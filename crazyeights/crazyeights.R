@@ -164,7 +164,7 @@ doAI <- function(deck, hands, stack, wildcard, drawCount, options) {
           if(stack[[length(stack)]][[2]] == "7" && options[2]){
             tempLength <- sapply(hands, length)
             tempLength[turnorder[2]] <- 9999
-            hands <- swaphands(hands, turnorder[2], which.min(tempLength))
+            hands <- swapHands(hands, turnorder[2], which.min(tempLength))
           }
         }
 
@@ -567,5 +567,5 @@ if(!options[3] || (length(hands[[1]]) == 0 && options[3])){
   text(5,3, "You win!")
 } else {
   text(5,3, "Game Over")
-  text(5,2, paste0("Player ", which.min(sapply(my_list, length)), " wins"))
+  text(5,2, paste0("Player ", which.min(sapply(hands, length)), " wins"))
 }

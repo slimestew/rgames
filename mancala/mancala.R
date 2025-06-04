@@ -166,8 +166,14 @@ if(options[2] == 0) {
 
 drawBoard(board, turn, options[2])
 turn <- 3 - turn
-
 rect(2,2.5,7,6.5, col="white")
+
+if(board[7] == board[14]) {
+  text(4.5,3, "Draw!")
+  polygon(c(3,4,5,6,7,6,8,5,4,3,4,3)/-3+7, c(3,2,4,3,4,5,10,6,7,6,5,3)/3+3, col="gray")
+  polygon(c(3,4,5,6,7,6,8,5,4,3,4,3)/3+2, c(3,2,4,3,4,5,10,6,7,6,5,3)/3+3, col="gray")
+} else {
   text(4.5,4, paste("Player ", (board[7]<board[14]) + 1))
   text(4.5,3, "wins!")
   polygon(c(3,3,4,5,6,7,7,3)/2+2, c(4,6,4.5,6,4.5,6,3,3)/2+3.25, col="yellow")
+}
