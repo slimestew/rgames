@@ -65,7 +65,55 @@ checkwin <- function(board){
 }
 
 doAI <- function(board, human){
-  return(board) #no possible moves
+  bestScore <- 0
+  bestOpp <- 0
+  bestMove <- 0
+  tempboard <- board
+  depth <- 5 #depth can be improved to make it better i guess?
+  ownScore <- 7
+  if(human == 2)
+    ownScore <- 14
+  for (store in 2:7) {
+    if(board[3*store + 16*(3-human) - 2*(store*(3-human)) - 17] == 0) #same formula but for flipped turns
+      next
+    tempBoard <- iteratemove(board, 3 - human, 3 - human, depth)[[1]]  #option is 1 if cpu goes second, so the turn will be 2
+      if( (tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
+        #beats previous best score, or ties while limiting opponent's score
+        bestScore <- tempBoard[ownScore]
+        bestOpp <- tempBoard[21 - ownScore]
+        bestMove <- store
+      }
+      tempboard <- board
+  }
+  #seems to break as player 1, but works fine on p2
+  return(dropp(bestMove, 3 - human, board))
+}
+
+iteratemove <- function(board, side, turn, depth){
+  bestScore <- 0
+  bestOpp <- 0
+  bestMove <- 0
+  tempboard <- board
+  dropped <- c(0,0)
+  ownScore <- 7
+  if(side == 2){
+    ownScore <- 14
+  }
+  for (store in 2:7) {
+    dropped <- dropp(store, turn, board)
+    if(any(is.na(dropped)))
+      return(list(dropped[1:14], side, dropped[15], depth-1))
+    if(depth>1){
+      tempBoard <- iteratemove(dropped[1:14], side, dropped[15], depth-1)[[1]]
+      if((tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
+        #beats previous best score, or ties while limiting opponent's score
+        bestScore <- tempBoard[ownScore]
+        bestOpp <- tempBoard[21 - ownScore]
+        bestMove <- store
+      }
+    }
+  }
+  return(list(dropped[1:14], side, dropped[15], depth))
 }
 
 dropp <- function(selected, turn, board){
@@ -135,8 +183,9 @@ while(!checkwin(board)) {
   if(menu>0 && !checkwin(board)){
     selected <- floor(click$x)
     if(options[3]>0 && turn != options[3]){
-      board <- doAI(board, options[3])
-      turn <- 3 - turn
+      aiStuff <- doAI(board, options[3])
+      board <- aiStuff[1:14]
+      turn <- aiStuff[15]
     } else if(selected > 1 && selected < 8){
       test <- dropp(selected, turn, board)
       if(!anyNA(test[1:14])){

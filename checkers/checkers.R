@@ -23,7 +23,8 @@ doAI <- function(board){
   return(board)
 }
 
-checkCap <- function(board, turn){
+checkCap <- function(board, selected, turn){
+  #todo: check if selected can move
   order <- c(-1,1)
   for(i in 1:8){
     for(j in 1:8){
@@ -55,23 +56,23 @@ checkCap <- function(board, turn){
 }
 
 movePiece <- function(board, selected, turn){
-  tempBoard <- board
-  if(checkCap(board,turn)){ #capture required
+  tb <- board #tempBoard
+  if(checkCap(board, selected, turn)){ #capture required
     if((abs(selected[1] - selected[3]) == 2) && (abs(selected[2] - selected[4]) == 2) #capture
-       && (tempBoard[selected[1], selected[2]] == turn && tempBoard[selected[3], selected[4]] == 0) #open space
-       && ((tempBoard[(selected[1]+selected[3])/2, (selected[2]+selected[4])/2] == 3- turn))){ #enemy
-      tempiece <- tempBoard[selected[1], selected[2]] #swap
-      tempBoard[selected[1], selected[2]] <- tempBoard[selected[3], selected[4]]
-      tempBoard[selected[3], selected[4]] <- tempiece
-      tempBoard[(selected[1]+selected[3])/2, (selected[2]+selected[4])/2] <- 0 #enemy
-      if((selected[4] == 1 && tempBoard[selected[3], selected[4]] == 1) || (selected[4] == 8 && tempBoard[selected[3], selected[4]] == 2))
-         tempBoard[selected[3], selected[4]] <- tempBoard[selected[3], selected[4]]*-1
+       && (tb[selected[1], selected[2]] == turn && tb[selected[3], selected[4]] == 0) #open space
+       && ((tb[(selected[1]+selected[3])/2, (selected[2]+selected[4])/2] == 3- turn))){ #enemy
+      tempiece <- tb[selected[1], selected[2]] #swap
+      tb[selected[1], selected[2]] <- tb[selected[3], selected[4]]
+      tb[selected[3], selected[4]] <- tempiece
+      tb[(selected[1]+selected[3])/2, (selected[2]+selected[4])/2] <- 0 #enemy
+      if((selected[4] == 1 && tb[selected[3], selected[4]] == 1) || (selected[4] == 8 && tb[selected[3], selected[4]] == 2))
+         tb[selected[3], selected[4]] <- tb[selected[3], selected[4]]*-1
     }
-    return(tempBoard) #if just here, failed
+    return(tb) #if just here, failed
   }
-  if(abs(selected[1] - selected[3]) == 1 && abs(selected[2] - selected[4]) == 1 && tempBoard[selected[3], selected[4]] == 0) #no caps
-    tempBoard[c(selected[1], selected[3]), c(selected[2], selected[4])] <- tempBoard[c(selected[3], selected[1]), c(selected[4], selected[2])] #swap
-  return(tempBoard)
+  if(abs(selected[1] - selected[3]) == 1 && abs(selected[2] - selected[4]) == 1 && tb[selected[3], selected[4]] == 0) #no caps
+    tb[c(selected[1], selected[3]), c(selected[2], selected[4])] <- tb[c(selected[3], selected[1]), c(selected[4], selected[2])] #swap
+  return(tb)
 }
 
 drawBoard <- function(board, options, turn, selected, flipboard){
@@ -181,7 +182,7 @@ while(!checkWin(board) || floor(click$y) < 2) {
       if((!(gridsize-floor(click$x)+1 == selected[1] && gridsize-floor(click$y)+1 == selected[2]) && flipboard))
         temp <- movePiece(board, c(selected, gridsize-floor(click$x)+1, gridsize-floor(click$y)+1), turn)
       if(!identical(temp,board)){ #game state changed
-          if(!checkCap(board,turn)){
+          if(!checkCap(board, selected, turn)){
             turn <- 3 - turn
             pause <- TRUE
           }

@@ -38,4 +38,16 @@
 | Visual Novel     | vn          | Empty     |
 | Rsynth           | synth       | Empty     |
 | Adventure        | adventure   | Empty     |
+| Rogue-like       | rogue       | Empty     |
+| City Builder     | citybuilder | Empty     |
+| World of Candy   | candygame   | Empty     |
+| Contour Golf     | golf        | Empty     |
+| Lights Out       | lightsout   | Empty     |
+| Game Of Life     | life        | Empty     |
+| Colorcube Puzzle | rubik       | Empty     |
+| Voxel Programmer | replicube   | Empty     |
+| Heatmap Game     | heatmap     | Empty     |
+| Earth Game       | earth       | Empty     |
+| Network Graph    | netgame     | Empty     |
+| Drum Machine     | heatmapdrum | Empty     |
 | Clock            | clock       | Complete  |
