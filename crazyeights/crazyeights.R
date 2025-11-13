@@ -438,11 +438,11 @@ rect(0,-2,10,6, col="brown", border="black")
 if(!pause){
   
   if(length(deck) == 0){
-    rect(3,4,5,5, col="brown", border="black", lty = "dashed")
+    rect(3,3.5,5,4.75, col="brown", border="black", lty = "dashed")
   } else {
     i <- 0
     if(floor(length(deck)/8) > 0)
-      for(i in 1:floor(length(deck)/8)) #TODO: make this fall properly
+      for(i in 1:floor(length(deck)/8))
         rect(3,3.5+(i*0.1),5,4.5+(i*0.1), col="chartreuse4", border="black")
     i <- i+1
     rect(3,3.5+(i*0.1),5,4.5+(i*0.1), col="chartreuse3", border="black")
@@ -522,6 +522,17 @@ if(!pause){
       }
       scores[turnorder[2]] <- scores[turnorder[2]] + sum
     }
+    
+    click <- locator(1)
+    plot(0, 0, type = "n", xlim = c(0, 10), ylim = c(0, 10), xlab = "", ylab = "", axes = FALSE, frame.plot = FALSE)
+    for(i in 1:options[4]+2){
+      rect(2,10-i,5, 9-i, col="white", border="black")
+      rect(5,10-i,8, 9-i, col="white", border="black")
+      text(3.5, 9.5-i, paste("Player",i-1))
+      text(6.5, 9.5-i, paste("Score:",scores[i-1]))
+    }
+    text(5,10, paste("Score to win is",maxScore))
+    text(5,9, paste("Click to begin next round"))
       
     if(all(scores < maxScore) && options[1] == 0)
       win <- TRUE

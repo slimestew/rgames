@@ -8,7 +8,7 @@ options <- c(0, 1, 2, 0)
 # Board color
 # Human or Computer (computer can go first or second)
 turn <- 1
-fiarColors <- c("red", "yellow", "blue", "green", "orange", "cyan", "purple", "white", "pink", "chartreuse", "tan", "darkorange4")
+fiarColors <- c("red", "yellow", "blue", "green", "orange", "cyan", "blueviolet", "white", "violet", "chartreuse", "tan", "darkorange4")
 
 dropp <- function(col, player, board){
   for(r in 6:1)

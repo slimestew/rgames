@@ -17,7 +17,7 @@
 | Tic Tac Toe      | tictactoe   | Playable  |
 | Chess            | chess       | Empty     |
 | Checkers         | checkers    | WIP       |
-| Mancala          | mancala     | Playable  |
+| Mancala          | mancala     | Complete  |
 | Sudoku           | sudoku      | Empty     |
 | Dots and Boxes   | dotsnboxes  | Empty     |
 | Gomoku           | gomoku      | Empty     |
@@ -42,7 +42,7 @@
 | City Builder     | citybuilder | Empty     |
 | World of Candy   | candygame   | Empty     |
 | Contour Golf     | golf        | Empty     |
-| Lights Out       | lightsout   | Empty     |
+| Lights Out       | lightsout   | Complete  |
 | Game Of Life     | life        | Empty     |
 | Colorcube Puzzle | rubik       | Empty     |
 | Voxel Programmer | replicube   | Empty     |

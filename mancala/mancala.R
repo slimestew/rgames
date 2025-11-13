@@ -4,13 +4,16 @@ board[7] <- 0
 board[14] <- 0
 menu <- 0
 click <- list(x = 3, y = 3)
-options <- c(1, 0, 0)
+options <- c(0, 0, 0)
 # Theme
 # 4 row board? Y/N
 # Human or Computer (computer can go first or second)
+themeColors <- c(
+  list(c(rep("black", 5), "goldenrod4")), list(rep("white", 6)), list(c("green", "blue", "red", "purple", "cyan", "red"))
+)
 turn <- 1
 
-drawBoard <- function(board, turn, variation){
+drawBoard <- function(board, turn, variation, theme){
   plot(0, 0, type = "n", xlim = c(1, 9), ylim = c(1, 7), col="white", xlab = paste("Player ", turn, "'s turn", sep=""), ylab = "", axes = FALSE, frame.plot = FALSE)
   if(variation){
     for (i in 1:7) {
@@ -30,23 +33,23 @@ drawBoard <- function(board, turn, variation){
         symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 2, circles = 0.5, inches = FALSE, bg = "goldenrod2", fg = "black", add = TRUE)
         text(xOffset + (0.5+(j*9)), (j*2)+3, board[house])
         if(board[house] %% 2 == 1 || board[house] >= 9){
-          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][1], fg = "black", add = TRUE)
         }
         if(board[house] >= 2){
-          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
-          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][2], fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][2], fg = "black", add = TRUE)
         }
         if(board[house] >= 4){
-          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
-          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][3], fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][3], fg = "black", add = TRUE)
         }
         if(board[house] >= 6){
-          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
-          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.25+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][4], fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.75+(j*9)), y = yOffset + 2, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][4], fg = "black", add = TRUE)
         }
         if(board[house] >= 8){
-          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
-          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = "black", fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 1.75, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][5], fg = "black", add = TRUE)
+          symbols(x = xOffset + (0.5+(j*9)), y = yOffset + 2.25, circles = 0.125, inches = FALSE, bg = themeColors[[theme]][5], fg = "black", add = TRUE)
         }
       }
     }
@@ -65,10 +68,10 @@ checkwin <- function(board){
 }
 
 doAI <- function(board, human){
-  bestScore <- 0
+  bestScore <- -1 #it's gotta pick something
   bestOpp <- 0
   bestMove <- 0
-  tempboard <- board
+  tempBoard <- board
   depth <- 5 #depth can be improved to make it better i guess?
   ownScore <- 7
   if(human == 2)
@@ -77,23 +80,24 @@ doAI <- function(board, human){
     if(board[3*store + 16*(3-human) - 2*(store*(3-human)) - 17] == 0) #same formula but for flipped turns
       next
     tempBoard <- iteratemove(board, 3 - human, 3 - human, depth)[[1]]  #option is 1 if cpu goes second, so the turn will be 2
-      if( (tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
-        #beats previous best score, or ties while limiting opponent's score
-        bestScore <- tempBoard[ownScore]
-        bestOpp <- tempBoard[21 - ownScore]
-        bestMove <- store
-      }
-      tempboard <- board
+    print(tempBoard)  
+    if( (tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
+      #beats previous best score, or ties while limiting opponent's score
+      bestScore <- tempBoard[ownScore]
+      bestOpp <- tempBoard[21 - ownScore]
+      bestMove <- store
+    }
+    tempBoard <- board
   }
   #seems to break as player 1, but works fine on p2
   return(dropp(bestMove, 3 - human, board))
 }
 
 iteratemove <- function(board, side, turn, depth){
-  bestScore <- 0
+  bestScore <- -1
   bestOpp <- 0
   bestMove <- 0
-  tempboard <- board
+  tempBoard <- board
   dropped <- c(0,0)
   ownScore <- 7
   if(side == 2){
@@ -105,11 +109,19 @@ iteratemove <- function(board, side, turn, depth){
       return(list(dropped[1:14], side, dropped[15], depth-1))
     if(depth>1){
       tempBoard <- iteratemove(dropped[1:14], side, dropped[15], depth-1)[[1]]
-      if((tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
-        #beats previous best score, or ties while limiting opponent's score
-        bestScore <- tempBoard[ownScore]
-        bestOpp <- tempBoard[21 - ownScore]
-        bestMove <- store
+      if(side == turn){
+        if((tempBoard[ownScore] > bestScore) || (tempBoard[ownScore] == bestScore && tempBoard[21 - ownScore] < bestOpp)){
+          #beats previous best score, or ties while limiting opponent's score
+          bestScore <- tempBoard[ownScore]
+          bestOpp <- tempBoard[21 - ownScore]
+          bestMove <- store
+        }
+      } else { #assume i am playing optimally also
+        if((tempBoard[21 - ownScore] > bestScore) || (tempBoard[21 - ownScore] == bestScore && tempBoard[ownScore] < bestOpp)){
+          bestScore <- tempBoard[21- ownScore]
+          bestOpp <- tempBoard[ownScore]
+          bestMove <- store
+        }
       }
     }
   }
@@ -125,9 +137,14 @@ dropp <- function(selected, turn, board){
     board[index] <- 0
     endingcell <- ((index+temp-1) %% 14) + 1
     
-    for(i in index:(index+temp-1)){
-      if(!((turn == 1 && i == 7) && (turn == 2 && i == 14))) #skip opponent's store
+    i <- index
+    while(i <= (index+temp-1)){
+      if(!((turn == 1 && (i%%14) == 13) || (turn == 2 && (i%%14) == 6))){ #skip opponent's store
         board[(i %% 14) + 1] <- board[(i %% 14) + 1] + 1
+      } else { #lengthen loop as we haven't finished
+        temp <- temp + 1
+      }
+      i <- i+1
     } 
     
     if((turn == (endingcell>7)+1) && (board[endingcell] == 1) && (board[-1*endingcell+14] > 0) && (endingcell %% 7 > 0)){ #previously empty pit on on player's side
@@ -156,7 +173,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2 ){
   
   if((floor(click$x) > 1 && floor(click$x) < 7) && menu > 0){
     if(floor(click$y) == 3)
-      options[1] <- (options[1]+1) %% 4
+      options[1] <- (options[1]+1) %% 3
     if(floor(click$y) == 2)
       options[2] <- (options[2]+1) %% 2
     if(floor(click$y) == 1)
@@ -164,7 +181,7 @@ while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2 ){
   }
   
   rect(1, 5, 7, 6, col = "yellow", border = "pink4")
-  rect(1, 3, 7, 4, col = "goldenrod4", border = "black")
+  rect(1, 3, 7, 4, col = themeColors[[options[1]+1]][6], border = "black")
   rect(1, 2, 7, 3, col = "goldenrod1", border = "black")
   rect(1, 1, 7, 2, col = "goldenrod3", border = "black")
   text(4,8, "Mancala")
@@ -200,7 +217,7 @@ while(!checkwin(board)) {
   else
     plot(0, 0, type = "n", xlim = c(1, 8), ylim = c(1, 7), col="white", xlab = paste("Player ", turn, "'s turn", sep=""), ylab = "", axes = FALSE, frame.plot = FALSE)
   
-  drawBoard(board, turn, options[2])
+  drawBoard(board, turn, options[2], options[1]+1)
   
   menu <- 1
   if(!checkwin(board))
