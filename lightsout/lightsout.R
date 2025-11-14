@@ -1,5 +1,6 @@
 par(bg = "slategray3")
 board <- matrix(0, nrow = 5, ncol = 5)
+clicks <- 0
 menu <- 0
 click <- list(x = 3, y = 3)
 options <- c(0, 0, 0)
@@ -23,7 +24,6 @@ fliplights <- function(x, y, board){
   return(board)
 }
 
-
 plot(0, 0, type = "n", xlim = c(0, 9), ylim = c(0, 9), col="white", xlab = "by slimestew", ylab = "", axes = FALSE, frame.plot = TRUE)
 
 par(bg = "slategray3") #menu
@@ -31,7 +31,6 @@ text(1.5,8, "Lights Out")
 polygon(c(4,4,3,3.5,5,6.5,7,6,6), c(1,2,5,7,8,7,5,2,1), col="lightgoldenrod1", border="black")
 rect(4,0,6,1, col = "gray30", border = "black")
 segments(c(4.5, 5.5, 4.5, 5.5, 4, 6, 5, 5,  6, 6, 5), c(1, 1, 4, 4, 5, 5, 5, 5,  1, 0.5, 1), c(4.5, 5.5, 4, 6, 5, 5, 4.75, 5.25,  4, 5, 4), c(4, 4, 5, 5, 4, 4, 4.25, 4.25,  0, 0, 0.5), col="black")
-
 
 while((floor(click$y) < 5 || floor(click$y) > 8) || menu < 2){
   click <- locator(1)
@@ -68,27 +67,44 @@ if(!options[2]){
       moves <- moves[-length(moves)]
       moves <- c(moves, list(c(sample(1:5, 1), sample(1:5, 1))))
     }
-    board <- fliplights(sample(1:5, 1), sample(1:5, 1), board)
+    board <- fliplights(tail(moves, 1)[[1]][1], tail(moves, 1)[[1]][2], board) #ugly
   }
 }
 
 #game loop
 while((any(board == 1) || options[2] == 1)) {
-
+  if(click$x==0){} #trick to stop the screen from clearing when execution finishes
     plot(0, 0, type = "n", xlim = c(1, 8), ylim = c(1, 7), col="white", xlab = "", ylab = "", axes = FALSE, frame.plot = TRUE)
-  if(floor(click$x) > 0 && floor(click$x) < 6 && floor(click$y) > 1 && floor(click$y) < 7 && menu == 1){
+  if(click$x > 0 && click$x < 6 && click$y > 1 && click$y < 7 && menu == 1){
     board <- fliplights(floor(click$x), floor(click$y)-1, board)
+    clicks <- clicks + 1
   }
-
+  if(click$x < 8 && click$x > 6 && click$y < 4 && click$y > 3){
+    clicks <- 0
+    board <- matrix(0, nrow = 5, ncol = 5)
+    if(!options[2]){
+      for(move in moves)
+        board <- fliplights(move[1], move[2], board)
+    }
+  }
   
   for(i in 1:5)
     for(j in 1:5)
       rect(i, j + 2 , i + 1, j + 1, col = ifelse(board[j,i]==0, themeColors[[options[1]+1]][1], themeColors[[options[1]+1]][2]), border = "black")
+  
+  rect(6, 3, 8, 4, col = "slategray3", border = "black")
+  text(7,6, "Lights Out!")
+  text(7,3.5, "Reset")
+  text(7,2.5, paste("Moves:", clicks))
   
   menu <- 1
   if((any(board == 1) || options[2] == 1))
     click <- locator(1)
 }
 
-rect(2.5,3.5,4.5,5.5, col="thistle4")
-text(3.5,4.5, "You win!")
+rect(2.5,3.5,4.5,5.5, col="thistle3")
+if(clicks == length(moves)){
+  text(3.5,4.5, "You win!")
+} else {
+  text(3.5,4.5, "Nice try!")
+}
